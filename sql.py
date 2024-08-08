@@ -49,9 +49,9 @@ class VeiculosIntegrantes(Base):
     __tablename__ = 'veiculos'
     id = Column(Integer, primary_key=True, autoincrement=True)
     id_integrante = Column(Integer, ForeignKey('integrantes.id'))  # Chave estrangeira para a tabela 'integrantes'
-    ano_modelo = Column(String)
     status = Column(String)
     inclusao = Column(String)
+    exclusao = Column(String)
     tipo = Column(String)
     especie = Column(String)
     composicao = Column(String)
@@ -63,8 +63,8 @@ class VeiculosIntegrantes(Base):
     marca = Column(String)
     modelo = Column(String)
     placa = Column(String)
-    ano_fabricacao = Column(Integer)
-    ano_modelo = Column(Integer)
+    ano_fabricacao = Column(String)
+    ano_modelo = Column(String)
     renavam = Column(String)
     chassi = Column(String)
     cor = Column(String)
