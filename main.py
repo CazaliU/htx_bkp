@@ -218,6 +218,7 @@ for i in range(0, num_insertes + 1):
         time.sleep(3)
         
         j += 1
+        i += 1
         y1 = y1 + 41
         continue
 
@@ -300,4 +301,5 @@ for i in range(0, num_insertes + 1):
     time.sleep(3)
     
     j += 1
+    i += 1
     y1 = y1 + 41
