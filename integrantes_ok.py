@@ -58,8 +58,7 @@ time.sleep(3)  # Pode ser necessário ajustar o tempo
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  # Substitua pela URL real da página
 
 # Aguarde a página carregar
-time.sleep(10)  
-
+time.sleep(15)  
 
 j = 0
 for i in range(0, num_insertes + 1):
@@ -71,14 +70,13 @@ for i in range(0, num_insertes + 1):
         x1, y1 = 46, 540
         j=0
         
-        if i > 123:
+        if i > 63:
             break
         
     # CLICA NO VER
     pyautogui.click(x1, y1)
 
     time.sleep(3)
-
 
     # Espera até que o modal esteja visível
     modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
@@ -107,7 +105,6 @@ for i in range(0, num_insertes + 1):
         else:
             # Tratar a situação quando nenhum dos elementos é encontrado
             status = "Status não encontrado" 
-
 
     inclusao = soup.find('div', class_='sub_status').find_all('span')[0].next_sibling.strip()
     vigencia = soup.find('div', class_='sub_status').find_all('span')[1].next_sibling.strip()
@@ -168,7 +165,6 @@ for i in range(0, num_insertes + 1):
     indice_participacao = None
     integracao_trackbrasil = None
     
-
     for elemento in elementos:
         texto = elemento.text.strip()
         if texto.startswith("Razão Social:"):
@@ -208,30 +204,43 @@ for i in range(0, num_insertes + 1):
         elif texto.startswith("Integração TrackBrasil:"):
             integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
 
-    #Criar sessão
+    # Criar sessão
     Session = sessionmaker(bind=engine)
     session = Session()
 
+    # Verificar se o cliente já está cadastrado
+    cliente_existente = session.query(DadosIntegrantes).filter_by(cnpj=cnpj).first()
+    if cliente_existente:
+        print(f"Cliente com CNPJ {cnpj} já está cadastrado. Pulando para o próximo.")
+            # FECHA
+        pyautogui.click(1813, 193)
+        
+        time.sleep(3)
+        
+        j += 1
+        i += 1
+        y1 = y1 + 41
+        continue
 
     # Itera sobre os valores capturados e insere no banco de dados
     for i in range(0, len(logradouros), 2):
-        logradouro = logradouros[i] if i < len(logradouros) else None
-        numero = numeros[i] if i < len(numeros) else None
-        bairro = bairros[i] if i < len(bairros) else None
-        cep = ceps[i] if i < len(ceps) else None
-        complemento = complementos[i] if i < len(complementos) else None
-        referencia = referencias[i] if i < len(referencias) else None
-        estado = estados[i] if i < len(estados) else None
-        cidade = cidades[i] if i < len(cidades) else None
+        logradouro1 = logradouros[i] if i < len(logradouros) else None
+        numero1 = numeros[i] if i < len(numeros) else None
+        bairro1 = bairros[i] if i < len(bairros) else None
+        cep1 = ceps[i] if i < len(ceps) else None
+        complemento1 = complementos[i] if i < len(complementos) else None
+        referencia1 = referencias[i] if i < len(referencias) else None
+        estado1 = estados[i] if i < len(estados) else None
+        cidade1 = cidades[i] if i < len(cidades) else None
 
-        adm_logradouro = logradouros[i+1] if i+1 < len(logradouros) else None
-        adm_numero = numeros[i+1] if i+1 < len(numeros) else None
-        adm_bairro = bairros[i+1] if i+1 < len(bairros) else None
-        adm_cep = ceps[i+1] if i+1 < len(ceps) else None
-        adm_complemento = complementos[i+1] if i+1 < len(complementos) else None
-        adm_referencia = referencias[i+1] if i+1 < len(referencias) else None
-        adm_estado = estados[i+1] if i+1 < len(estados) else None
-        adm_cidade = cidades[i+1] if i+1 < len(cidades) else None
+        logradouro2 = logradouros[i+1] if i+1 < len(logradouros) else None
+        numero2 = numeros[i+1] if i+1 < len(numeros) else None
+        bairro2 = bairros[i+1] if i+1 < len(bairros) else None
+        cep2 = ceps[i+1] if i+1 < len(ceps) else None
+        complemento2 = complementos[i+1] if i+1 < len(complementos) else None
+        referencia2 = referencias[i+1] if i+1 < len(referencias) else None
+        estado2 = estados[i+1] if i+1 < len(estados) else None
+        cidade2 = cidades[i+1] if i+1 < len(cidades) else None
 
         novo_dado = DadosIntegrantes(
             status=status,
@@ -247,22 +256,22 @@ for i in range(0, num_insertes + 1):
             orgao_exp=orgao_exp,
             cpf=cpf,
             nascimento=nascimento,
-            logradouro=logradouro,
-            numero=numero,
-            bairro=bairro,
-            cep=cep,
-            complemento=complemento,
-            referencia=referencia,
-            estado=estado,
-            cidade=cidade,
-            adm_logradouro=adm_logradouro,
-            adm_numero=adm_numero,
-            adm_bairro=adm_bairro,
-            adm_cep=adm_cep,
-            adm_complemento=adm_complemento,
-            adm_referencia=adm_referencia,
-            adm_estado=adm_estado,
-            adm_cidade=adm_cidade,
+            logradouro1=logradouro1,
+            numero1=numero1,
+            bairro1=bairro1,
+            cep1=cep1,
+            complemento1=complemento1,
+            referencia1=referencia1,
+            estado1=estado1,
+            cidade1=cidade1,
+            logradouro2=logradouro2,
+            numero2=numero2,
+            bairro2=bairro2,
+            cep2=cep2,
+            complemento2=complemento2,
+            referencia2=referencia2,
+            estado2=estado2,
+            cidade2=cidade2,
             celular_preferencial=celular_preferencial,
             celular_complementar=celular_complementar,
             telefone=telefone,
@@ -273,25 +282,24 @@ for i in range(0, num_insertes + 1):
             integracao_trackbrasil=integracao_trackbrasil
         )
 
-    try: 
-        # Adicionar e confirmar a transação
-        session.add(novo_dado)
-        session.commit()
-    except IntegrityError as e:
-        if 'uq_cnpj' in str(e.orig):
-            print(f"Erro: O CNPJ {novo_dado.cnpj} já existe no banco de dados.")
-        else:
-            print(f"Erro de integridade: {e}")
-        session.rollback()
-    
+        try: 
+            # Adicionar e confirmar a transação
+            session.add(novo_dado)
+            session.commit()
+        except IntegrityError as e:
+            if 'uq_cnpj' in str(e.orig):
+                print(f"Erro: O CNPJ {novo_dado.cnpj} já existe no banco de dados.")
+            else:
+                print(f"Erro de integridade: {e}")
+            session.rollback()
+
     time.sleep(4)
     
-    #FECHA
+    # FECHA
     pyautogui.click(1813, 193)
     
     time.sleep(3)
     
-    print(i, razao_social)
-    j+=1
+    j += 1
+    i += 1
     y1 = y1 + 41
-    
