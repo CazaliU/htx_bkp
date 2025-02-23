@@ -112,9 +112,40 @@ for i in range(0, num_insertes + 1):
     inclusao = soup.find('div', class_='sub_status').find_all('span')[0].next_sibling.strip()
     vigencia = soup.find('div', class_='sub_status').find_all('span')[1].next_sibling.strip()
 
-    # print(f"Status: {status}")
-    # print(f"Inclusão: {inclusao}")
-    # print(f"Vigência do Contrato: {vigencia}")
+    # Captura múltiplos elementos de endereço
+    logradouro_elements = soup.find_all('div', class_='six columns fv')
+
+    # Inicializa variáveis para armazenar os valores
+    logradouros = []
+    numeros = []
+    bairros = []
+    ceps = []
+    complementos = []
+    referencias = []
+    estados = []
+    cidades = []
+
+    # Itera sobre os elementos e armazena os valores nas listas
+    for element in logradouro_elements:
+        label = element.find('b').get_text(strip=True)
+        value = element.get_text(strip=True).replace(label, '').strip()
+        
+        if 'Logradouro' in label:
+            logradouros.append(value)
+        elif 'Número' in label:
+            numeros.append(value)
+        elif 'Bairro' in label:
+            bairros.append(value)
+        elif 'CEP' in label:
+            ceps.append(value)
+        elif 'Complemento' in label:
+            complementos.append(value)
+        elif 'Referência' in label:
+            referencias.append(value)
+        elif 'Estado' in label:
+            estados.append(value)
+        elif 'Cidade' in label:
+            cidades.append(value)
 
     # Captura a Razão Social, CNPJ, Nome, Nacionalidade, Estado Civil, Profissão, RG, Orgão Exp, CPF e Nascimento
     elementos = soup.find_all('div', class_='six columns fv')
@@ -128,14 +159,6 @@ for i in range(0, num_insertes + 1):
     orgao_exp = None
     cpf = None
     nascimento = None
-    logradouro = None
-    numero = None
-    bairro = None
-    cep = None
-    complemento = None
-    referencia = None
-    estado = None
-    cidade = None
     celular_preferencial = None
     celular_complementar = None
     telefone = None
@@ -145,11 +168,6 @@ for i in range(0, num_insertes + 1):
     indice_participacao = None
     integracao_trackbrasil = None
     
-    
-    #Criar sessão
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
 
     for elemento in elementos:
         texto = elemento.text.strip()
@@ -173,22 +191,6 @@ for i in range(0, num_insertes + 1):
             cpf = texto.replace("CPF:", "").strip()
         elif texto.startswith("Nascimento:"):
             nascimento = texto.replace("Nascimento:", "").strip()
-        elif texto.startswith("Logradouro:"):
-            logradouro = texto.replace("Logradouro:", "").strip()
-        elif texto.startswith("Número:"):
-            numero = texto.replace("Número:", "").strip()
-        elif texto.startswith("Bairro:"):
-            bairro = texto.replace("Bairro:", "").strip()
-        elif texto.startswith("CEP:"):
-            cep = texto.replace("CEP:", "").strip()
-        elif texto.startswith("Complemento:"):
-            complemento = texto.replace("Complemento:", "").strip()
-        elif texto.startswith("Referência:"):
-            referencia = texto.replace("Referência:", "").strip()
-        elif texto.startswith("Estado:"):
-            estado = texto.replace("Estado:", "").strip()
-        elif texto.startswith("Cidade:"):
-            cidade = texto.replace("Cidade:", "").strip()
         elif texto.startswith("Celular Preferencial:"):
             celular_preferencial = texto.replace("Celular Preferencial:", "").strip()
         elif texto.startswith("Celular Complementar:"):
@@ -206,65 +208,70 @@ for i in range(0, num_insertes + 1):
         elif texto.startswith("Integração TrackBrasil:"):
             integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
 
-    # print(f"Razão Social: {razao_social}")
-    # print(f"CNPJ: {cnpj}")
-    # print(f"Nome: {nome}")
-    # print(f"Nacionalidade: {nacionalidade}")
-    # print(f"Estado Civil: {estado_civil}")
-    # print(f"Profissão: {profissao}")
-    # print(f"RG: {rg}")
-    # print(f"Orgão Exp: {orgao_exp}")
-    # print(f"CPF: {cpf}")
-    # print(f"Nascimento: {nascimento}")
-    # print(f"Logradouro: {logradouro}")
-    # print(f"Número: {numero}")
-    # print(f"Bairro: {bairro}")
-    # print(f"CEP: {cep}")
-    # print(f"Complemento: {complemento}")
-    # print(f"Referência: {referencia}")
-    # print(f"Estado: {estado}")
-    # print(f"Cidade: {cidade}")
-    # print(f"Celular Preferencial: {celular_preferencial}")
-    # print(f"Celular Complementar: {celular_complementar}")
-    # print(f"Telefone: {telefone}")
-    # print(f"E-mail: {email}")
-    # print(f"Vigência do Contrato: {vigencia_contrato}")
-    # print(f"Método de Cobrança: {metodo_cobranca}")
-    # print(f"Índice de Participação Padrão: {indice_participacao}")
-    # print(f"Integração TrackBrasil: {integracao_trackbrasil}")
-    
-    # Inserir os dados capturados no banco de dados
-    novo_dado = DadosIntegrantes(
-        status=status,
-        inclusao=inclusao,
-        vigencia=vigencia,
-        razao_social=razao_social,
-        cnpj=cnpj,
-        nome=nome,
-        nacionalidade=nacionalidade,
-        estado_civil=estado_civil,
-        profissao=profissao,
-        rg=rg,
-        orgao_exp=orgao_exp,
-        cpf=cpf,
-        nascimento=nascimento,
-        logradouro=logradouro,
-        numero=numero,
-        bairro=bairro,
-        cep=cep,
-        complemento=complemento,
-        referencia=referencia,
-        estado=estado,
-        cidade=cidade,
-        celular_preferencial=celular_preferencial,
-        celular_complementar=celular_complementar,
-        telefone=telefone,
-        email=email,
-        vigencia_contrato=vigencia_contrato,
-        metodo_cobranca=metodo_cobranca,
-        indice_participacao=indice_participacao,
-        integracao_trackbrasil=integracao_trackbrasil
-    )
+    #Criar sessão
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+
+    # Itera sobre os valores capturados e insere no banco de dados
+    for i in range(0, len(logradouros), 2):
+        logradouro = logradouros[i] if i < len(logradouros) else None
+        numero = numeros[i] if i < len(numeros) else None
+        bairro = bairros[i] if i < len(bairros) else None
+        cep = ceps[i] if i < len(ceps) else None
+        complemento = complementos[i] if i < len(complementos) else None
+        referencia = referencias[i] if i < len(referencias) else None
+        estado = estados[i] if i < len(estados) else None
+        cidade = cidades[i] if i < len(cidades) else None
+
+        adm_logradouro = logradouros[i+1] if i+1 < len(logradouros) else None
+        adm_numero = numeros[i+1] if i+1 < len(numeros) else None
+        adm_bairro = bairros[i+1] if i+1 < len(bairros) else None
+        adm_cep = ceps[i+1] if i+1 < len(ceps) else None
+        adm_complemento = complementos[i+1] if i+1 < len(complementos) else None
+        adm_referencia = referencias[i+1] if i+1 < len(referencias) else None
+        adm_estado = estados[i+1] if i+1 < len(estados) else None
+        adm_cidade = cidades[i+1] if i+1 < len(cidades) else None
+
+        novo_dado = DadosIntegrantes(
+            status=status,
+            inclusao=inclusao,
+            vigencia=vigencia,
+            razao_social=razao_social,
+            cnpj=cnpj,
+            nome=nome,
+            nacionalidade=nacionalidade,
+            estado_civil=estado_civil,
+            profissao=profissao,
+            rg=rg,
+            orgao_exp=orgao_exp,
+            cpf=cpf,
+            nascimento=nascimento,
+            logradouro=logradouro,
+            numero=numero,
+            bairro=bairro,
+            cep=cep,
+            complemento=complemento,
+            referencia=referencia,
+            estado=estado,
+            cidade=cidade,
+            adm_logradouro=adm_logradouro,
+            adm_numero=adm_numero,
+            adm_bairro=adm_bairro,
+            adm_cep=adm_cep,
+            adm_complemento=adm_complemento,
+            adm_referencia=adm_referencia,
+            adm_estado=adm_estado,
+            adm_cidade=adm_cidade,
+            celular_preferencial=celular_preferencial,
+            celular_complementar=celular_complementar,
+            telefone=telefone,
+            email=email,
+            vigencia_contrato=vigencia_contrato,
+            metodo_cobranca=metodo_cobranca,
+            indice_participacao=indice_participacao,
+            integracao_trackbrasil=integracao_trackbrasil
+        )
 
     try: 
         # Adicionar e confirmar a transação
@@ -288,13 +295,3 @@ for i in range(0, num_insertes + 1):
     j+=1
     y1 = y1 + 41
     
-    
-    # except IntegrityError as e:
-    #     if 'uq_cnpj' in str(e.orig):
-    #         print(f"Erro: O CNPJ {novo_dado.cnpj} já existe no banco de dados.")
-    #     else:
-    #         print(f"Erro de integridade: {e}")
-    #     session.rollback()
-    # except Exception as e:
-    #     print(f"Erro ao localizar os dados: {e}")
-    #     session.rollback()
