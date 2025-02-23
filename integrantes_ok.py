@@ -1,10 +1,13 @@
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from dotenv import load_dotenv
+from sqlalchemy.exc import IntegrityError
+from sql import engine, DadosIntegrantes
+from sqlalchemy.orm import sessionmaker
 from selenium import webdriver
+from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import pyautogui
 import time
@@ -17,8 +20,11 @@ load_dotenv()
 username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
 
-x1, y1 = 33, 659
+# BOTAO VER INICIAL
+x1, y1 = 46, 540
 
+# NUMERO DE INTEGRANTES
+num_insertes = 5000
 
 # Configura o caminho para o ChromeDriver
 chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
@@ -46,7 +52,7 @@ password_input.send_keys(password)  # Substitua pela sua senha
 submit_button.click()
 
 # Aguarde a página carregar
-time.sleep(5)  # Pode ser necessário ajustar o tempo
+time.sleep(3)  # Pode ser necessário ajustar o tempo
 
 # Navega para a página onde está o status
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  # Substitua pela URL real da página
@@ -54,11 +60,26 @@ driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativ
 # Aguarde a página carregar
 time.sleep(10)  
 
-pyautogui.click(x1, y1)
 
-time.sleep(3)
+j = 0
+for i in range(0, num_insertes + 1):
+    
+    # verifica se a iteração é divisivel por 10
+    if j == 10:
+        pyautogui.click(1835, 957)
+        time.sleep(3)
+        x1, y1 = 46, 540
+        j=0
+        
+        if i > 123:
+            break
+        
+    # CLICA NO VER
+    pyautogui.click(x1, y1)
 
-try:
+    time.sleep(3)
+
+
     # Espera até que o modal esteja visível
     modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
     driver.implicitly_wait(10)  # Espera implícita para o modal
@@ -69,14 +90,31 @@ try:
     # Analisa o HTML com BeautifulSoup
     soup = BeautifulSoup(html, 'html.parser')
 
-    # Captura os dados de status, inclusão e vigência do contrato
-    status = soup.find('div', class_='label label-success').text.strip()
+    status = None
+    inclusao = None
+    vigencia = None
+
+    # Tentar encontrar o elemento com a classe 'label label-success'
+    status_element = soup.find('div', class_='label label-success')
+
+    if status_element is not None:
+        status = status_element.text.strip()
+    else:
+        # Se não encontrar 'label label-success', tentar encontrar 'label label-danger'
+        status_element = soup.find('div', class_='label label-danger')
+        if status_element is not None:
+            status = status_element.text.strip()
+        else:
+            # Tratar a situação quando nenhum dos elementos é encontrado
+            status = "Status não encontrado" 
+
+
     inclusao = soup.find('div', class_='sub_status').find_all('span')[0].next_sibling.strip()
     vigencia = soup.find('div', class_='sub_status').find_all('span')[1].next_sibling.strip()
 
-    print(f"Status: {status}")
-    print(f"Inclusão: {inclusao}")
-    print(f"Vigência do Contrato: {vigencia}")
+    # print(f"Status: {status}")
+    # print(f"Inclusão: {inclusao}")
+    # print(f"Vigência do Contrato: {vigencia}")
 
     # Captura a Razão Social, CNPJ, Nome, Nacionalidade, Estado Civil, Profissão, RG, Orgão Exp, CPF e Nascimento
     elementos = soup.find_all('div', class_='six columns fv')
@@ -102,6 +140,16 @@ try:
     celular_complementar = None
     telefone = None
     email = None
+    vigencia_contrato = None
+    metodo_cobranca = None
+    indice_participacao = None
+    integracao_trackbrasil = None
+    
+    
+    #Criar sessão
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
 
     for elemento in elementos:
         texto = elemento.text.strip()
@@ -158,36 +206,95 @@ try:
         elif texto.startswith("Integração TrackBrasil:"):
             integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
 
-    print(f"Razão Social: {razao_social}")
-    print(f"CNPJ: {cnpj}")
-    print(f"Nome: {nome}")
-    print(f"Nacionalidade: {nacionalidade}")
-    print(f"Estado Civil: {estado_civil}")
-    print(f"Profissão: {profissao}")
-    print(f"RG: {rg}")
-    print(f"Orgão Exp: {orgao_exp}")
-    print(f"CPF: {cpf}")
-    print(f"Nascimento: {nascimento}")
-    print(f"Logradouro: {logradouro}")
-    print(f"Número: {numero}")
-    print(f"Bairro: {bairro}")
-    print(f"CEP: {cep}")
-    print(f"Complemento: {complemento}")
-    print(f"Referência: {referencia}")
-    print(f"Estado: {estado}")
-    print(f"Cidade: {cidade}")
-    print(f"Celular Preferencial: {celular_preferencial}")
-    print(f"Celular Complementar: {celular_complementar}")
-    print(f"Telefone: {telefone}")
-    print(f"E-mail: {email}")
-    print(f"Vigência do Contrato: {vigencia_contrato}")
-    print(f"Método de Cobrança: {metodo_cobranca}")
-    print(f"Índice de Participação Padrão: {indice_participacao}")
-    print(f"Integração TrackBrasil: {integracao_trackbrasil}")
+    # print(f"Razão Social: {razao_social}")
+    # print(f"CNPJ: {cnpj}")
+    # print(f"Nome: {nome}")
+    # print(f"Nacionalidade: {nacionalidade}")
+    # print(f"Estado Civil: {estado_civil}")
+    # print(f"Profissão: {profissao}")
+    # print(f"RG: {rg}")
+    # print(f"Orgão Exp: {orgao_exp}")
+    # print(f"CPF: {cpf}")
+    # print(f"Nascimento: {nascimento}")
+    # print(f"Logradouro: {logradouro}")
+    # print(f"Número: {numero}")
+    # print(f"Bairro: {bairro}")
+    # print(f"CEP: {cep}")
+    # print(f"Complemento: {complemento}")
+    # print(f"Referência: {referencia}")
+    # print(f"Estado: {estado}")
+    # print(f"Cidade: {cidade}")
+    # print(f"Celular Preferencial: {celular_preferencial}")
+    # print(f"Celular Complementar: {celular_complementar}")
+    # print(f"Telefone: {telefone}")
+    # print(f"E-mail: {email}")
+    # print(f"Vigência do Contrato: {vigencia_contrato}")
+    # print(f"Método de Cobrança: {metodo_cobranca}")
+    # print(f"Índice de Participação Padrão: {indice_participacao}")
+    # print(f"Integração TrackBrasil: {integracao_trackbrasil}")
+    
+    # Inserir os dados capturados no banco de dados
+    novo_dado = DadosIntegrantes(
+        status=status,
+        inclusao=inclusao,
+        vigencia=vigencia,
+        razao_social=razao_social,
+        cnpj=cnpj,
+        nome=nome,
+        nacionalidade=nacionalidade,
+        estado_civil=estado_civil,
+        profissao=profissao,
+        rg=rg,
+        orgao_exp=orgao_exp,
+        cpf=cpf,
+        nascimento=nascimento,
+        logradouro=logradouro,
+        numero=numero,
+        bairro=bairro,
+        cep=cep,
+        complemento=complemento,
+        referencia=referencia,
+        estado=estado,
+        cidade=cidade,
+        celular_preferencial=celular_preferencial,
+        celular_complementar=celular_complementar,
+        telefone=telefone,
+        email=email,
+        vigencia_contrato=vigencia_contrato,
+        metodo_cobranca=metodo_cobranca,
+        indice_participacao=indice_participacao,
+        integracao_trackbrasil=integracao_trackbrasil
+    )
 
-except Exception as e:
-    print(f"Erro ao localizar os dados: {e}")
-
-finally:
-    # Fecha o navegador
-    driver.quit()
+    try: 
+        # Adicionar e confirmar a transação
+        session.add(novo_dado)
+        session.commit()
+    except IntegrityError as e:
+        if 'uq_cnpj' in str(e.orig):
+            print(f"Erro: O CNPJ {novo_dado.cnpj} já existe no banco de dados.")
+        else:
+            print(f"Erro de integridade: {e}")
+        session.rollback()
+    
+    time.sleep(4)
+    
+    #FECHA
+    pyautogui.click(1813, 193)
+    
+    time.sleep(3)
+    
+    print(i, razao_social)
+    j+=1
+    y1 = y1 + 41
+    
+    
+    # except IntegrityError as e:
+    #     if 'uq_cnpj' in str(e.orig):
+    #         print(f"Erro: O CNPJ {novo_dado.cnpj} já existe no banco de dados.")
+    #     else:
+    #         print(f"Erro de integridade: {e}")
+    #     session.rollback()
+    # except Exception as e:
+    #     print(f"Erro ao localizar os dados: {e}")
+    #     session.rollback()

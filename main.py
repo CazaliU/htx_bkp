@@ -21,7 +21,7 @@ username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
 
 # BOTAO VER INICIAL
-x1, y1 = 83, 192
+x1, y1 = 46, 540
 
 # NUMERO DE INTEGRANTES
 num_insertes = 5000
@@ -64,11 +64,11 @@ time.sleep(10)
 j = 0
 for i in range(0, num_insertes + 1):
     
-    # verifica se a iteração é divisivel por 8
+    # verifica se a iteração é divisivel por 10
     if j == 10:
-        pyautogui.click(1296, 667)
+        pyautogui.click(1835, 957)
         time.sleep(3)
-        x1, y1 = 83, 192
+        x1, y1 = 46, 540
         j=0
         
         if i > 123:
@@ -280,13 +280,13 @@ for i in range(0, num_insertes + 1):
     time.sleep(4)
     
     #FECHA
-    pyautogui.click(1168, 91)
+    pyautogui.click(1813, 193)
     
     time.sleep(3)
     
     print(i, razao_social)
     j+=1
-    y1 = y1 + 32
+    y1 = y1 + 41
     
     
     # except IntegrityError as e:
