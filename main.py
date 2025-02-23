@@ -208,6 +208,19 @@ for i in range(0, num_insertes + 1):
     Session = sessionmaker(bind=engine)
     session = Session()
 
+    # Verificar se o cliente já está cadastrado
+    cliente_existente = session.query(DadosIntegrantes).filter_by(cnpj=cnpj).first()
+    if cliente_existente:
+        print(f"Cliente com CNPJ {cnpj} já está cadastrado. Pulando para o próximo.")
+            # FECHA
+        pyautogui.click(1813, 193)
+        
+        time.sleep(3)
+        
+        j += 1
+        y1 = y1 + 41
+        continue
+
     # Itera sobre os valores capturados e insere no banco de dados
     for i in range(0, len(logradouros), 2):
         logradouro1 = logradouros[i] if i < len(logradouros) else None
