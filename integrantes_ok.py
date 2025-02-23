@@ -1,17 +1,23 @@
-import os
-import pyautogui
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from dotenv import load_dotenv
+from selenium import webdriver
 from bs4 import BeautifulSoup
+import pyautogui
 import time
+import os
 
+# Carregar as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+# Obter as credenciais a partir das variáveis de ambiente
+username = os.getenv('APP_USERNAME')
+password = os.getenv('APP_PASSWORD')
 
 x1, y1 = 33, 659
-
 
 
 # Configura o caminho para o ChromeDriver
@@ -35,8 +41,8 @@ username_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Usuár
 password_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Senha"]')
 submit_button = driver.find_element(By.CSS_SELECTOR, 'input[type="submit"]')
 
-username_input.send_keys('grconsulta')  # Substitua pelo seu nome de usuário
-password_input.send_keys('track24br24')  # Substitua pela sua senha
+username_input.send_keys(username)  # Substitua pelo seu nome de usuário
+password_input.send_keys(password)  # Substitua pela sua senha
 submit_button.click()
 
 # Aguarde a página carregar

@@ -7,13 +7,21 @@ from sqlalchemy.exc import IntegrityError
 from sql import engine, DadosIntegrantes
 from sqlalchemy.orm import sessionmaker
 from selenium import webdriver
+from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import pyautogui
 import time
 import os
 
+# Carregar as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+# Obter as credenciais a partir das variáveis de ambiente
+username = os.getenv('APP_USERNAME')
+password = os.getenv('APP_PASSWORD')
+
 # BOTAO VER INICIAL
-x1, y1 = 40, 350
+x1, y1 = 83, 192
 
 # NUMERO DE INTEGRANTES
 num_insertes = 5000
@@ -39,18 +47,18 @@ username_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Usuár
 password_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Senha"]')
 submit_button = driver.find_element(By.CSS_SELECTOR, 'input[type="submit"]')
 
-username_input.send_keys('grconsulta')  # Substitua pelo seu nome de usuário
-password_input.send_keys('track24br24')  # Substitua pela sua senha
+username_input.send_keys(username)  # Substitua pelo seu nome de usuário
+password_input.send_keys(password)  # Substitua pela sua senha
 submit_button.click()
 
 # Aguarde a página carregar
-time.sleep(5)  # Pode ser necessário ajustar o tempo
+time.sleep(3)  # Pode ser necessário ajustar o tempo
 
 # Navega para a página onde está o status
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  # Substitua pela URL real da página
 
 # Aguarde a página carregar
-time.sleep(15)  
+time.sleep(10)  
 
 
 j = 0
@@ -60,7 +68,7 @@ for i in range(0, num_insertes + 1):
     if j == 10:
         pyautogui.click(1296, 667)
         time.sleep(3)
-        x1, y1 = 40, 350
+        x1, y1 = 83, 192
         j=0
         
         if i > 123:

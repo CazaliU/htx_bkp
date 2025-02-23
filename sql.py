@@ -1,17 +1,27 @@
 from sqlalchemy import create_engine, Column, String, Integer, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import UniqueConstraint
 from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy import UniqueConstraint
+from dotenv import load_dotenv
+import os
+
+# Carregar as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+# Obter a URL do banco de dados a partir das variáveis de ambiente
+database_url = os.getenv('DATABASE_URL')
 
 # Configurar a conexão com o banco de dados PostgreSQL
-# Substitua 'username', 'password', 'host', 'port' e 'database' pelos detalhes do seu banco de dados PostgreSQL
-engine = create_engine('postgresql://postgres:D836MpYz82eL79odbC3ZFa@cargo.trackbrasil.com.br:5432/htx_bk', echo=True)
+engine = create_engine(database_url, echo=True)
 Base = declarative_base()
 
 # Definir o modelo de classe
 class DadosIntegrantes(Base):
     __tablename__ = 'integrantes'
     id = Column(Integer, primary_key=True, autoincrement=True)
+    status = Column(String)
+    inclusao = Column(String)
+    vigencia = Column(String)
     razao_social = Column(String)
     cnpj = Column(String, unique=True)  # Adiciona a restrição de unicidade
     nome = Column(String)
