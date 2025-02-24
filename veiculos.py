@@ -9,9 +9,16 @@ from sqlalchemy.orm import sessionmaker, session
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import pyautogui
+from dotenv import load_dotenv
 import time
 import os
 
+# Carregar as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+# Obter as credenciais a partir das variáveis de ambiente
+username = os.getenv('APP_USERNAME')
+password = os.getenv('APP_PASSWORD')
 
 
 # Configura o caminho para o ChromeDriver
@@ -35,9 +42,10 @@ username_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Usuár
 password_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Senha"]')
 submit_button = driver.find_element(By.CSS_SELECTOR, 'input[type="submit"]')
 
-username_input.send_keys('grconsulta')  # Substitua pelo seu nome de usuário
-password_input.send_keys('trackgr2025')  # Substitua pela sua senha
+username_input.send_keys(username)  # Substitua pelo seu nome de usuário
+password_input.send_keys(password)  # Substitua pela sua senha
 submit_button.click()
+
 
 # Aguarde a página carregar
 time.sleep(5)  # Pode ser necessário ajustar o tempo
