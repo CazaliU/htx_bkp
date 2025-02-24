@@ -21,7 +21,7 @@ username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
 
 # BOTAO VER INICIAL
-x1, y1 = 46, 852
+x1, y1 = 46, 540
 
 # NUMERO DE INTEGRANTES
 num_insertes = 5000
@@ -174,7 +174,7 @@ for i in range(0, num_insertes + 1):
     metodo_cobranca = None
     indice_participacao = None
     integracao_trackbrasil = None
-    estado_grupo = 'Grande Oeste'
+    estado_grupo = 'Grande SC'
     
     for elemento in elementos:
         texto = elemento.text.strip()
