@@ -21,7 +21,7 @@ username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
 
 # BOTAO VER INICIAL
-x1, y1 = 46, 540
+x1, y1 = 46, 852
 
 # NUMERO DE INTEGRANTES
 num_insertes = 5000
