@@ -91,6 +91,7 @@ for i in range(0, num_insertes + 1):
     status = None
     inclusao = None
     vigencia = None
+    exclusao = None
 
     # Tentar encontrar o elemento com a classe 'label label-success'
     status_element = soup.find('div', class_='label label-success')
@@ -107,7 +108,16 @@ for i in range(0, num_insertes + 1):
             status = "Status não encontrado" 
 
     inclusao = soup.find('div', class_='sub_status').find_all('span')[0].next_sibling.strip()
-    vigencia = soup.find('div', class_='sub_status').find_all('span')[1].next_sibling.strip()
+    tipo_vigencia_ou_exclusao = soup.find('div', class_='sub_status').find_all('span')[1].text.strip()
+    vigencia_ou_exclusao = soup.find('div', class_='sub_status').find_all('span')[1].next_sibling.strip()
+
+    if "Vigência do Contrato" in tipo_vigencia_ou_exclusao:
+        vigencia = vigencia_ou_exclusao
+    else:
+        exclusao = vigencia_ou_exclusao
+
+    print(f"Inclusão: {inclusao}")
+    print(f"{tipo_vigencia_ou_exclusao}: {vigencia_ou_exclusao}")
 
     # Captura múltiplos elementos de endereço
     logradouro_elements = soup.find_all('div', class_='six columns fv')
@@ -164,6 +174,7 @@ for i in range(0, num_insertes + 1):
     metodo_cobranca = None
     indice_participacao = None
     integracao_trackbrasil = None
+    estado_grupo = 'Grande SP'
     
     for elemento in elementos:
         texto = elemento.text.strip()
@@ -204,21 +215,19 @@ for i in range(0, num_insertes + 1):
         elif texto.startswith("Integração TrackBrasil:"):
             integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
 
+
     # Criar sessão
     Session = sessionmaker(bind=engine)
     session = Session()
 
     # Verificar se o cliente já está cadastrado
-    cliente_existente = session.query(DadosIntegrantes).filter_by(cnpj=cnpj).first()
+    cliente_existente = session.query(DadosIntegrantes).filter_by(cnpj=cnpj, estado_grupo=estado_grupo).first()
     if cliente_existente:
-        print(f"Cliente com CNPJ {cnpj} já está cadastrado. Pulando para o próximo.")
-            # FECHA
+        print(f"Cliente com CNPJ {cnpj} e Estado Grupo {estado_grupo} já está cadastrado. Pulando para o próximo.")
+        # FECHA
         pyautogui.click(1813, 193)
-        
         time.sleep(3)
-        
         j += 1
-        i += 1
         y1 = y1 + 41
         continue
 
@@ -246,6 +255,7 @@ for i in range(0, num_insertes + 1):
             status=status,
             inclusao=inclusao,
             vigencia=vigencia,
+            exclusao=exclusao,
             razao_social=razao_social,
             cnpj=cnpj,
             nome=nome,
@@ -279,7 +289,8 @@ for i in range(0, num_insertes + 1):
             vigencia_contrato=vigencia_contrato,
             metodo_cobranca=metodo_cobranca,
             indice_participacao=indice_participacao,
-            integracao_trackbrasil=integracao_trackbrasil
+            integracao_trackbrasil=integracao_trackbrasil,
+            estado_grupo=estado_grupo
         )
 
         try: 
@@ -287,8 +298,8 @@ for i in range(0, num_insertes + 1):
             session.add(novo_dado)
             session.commit()
         except IntegrityError as e:
-            if 'uq_cnpj' in str(e.orig):
-                print(f"Erro: O CNPJ {novo_dado.cnpj} já existe no banco de dados.")
+            if 'uq_cnpj_estado_grupo' in str(e.orig):
+                print(f"Erro: O CNPJ {novo_dado.cnpj} e Estado Grupo {novo_dado.estado_grupo} já existem no banco de dados.")
             else:
                 print(f"Erro de integridade: {e}")
             session.rollback()

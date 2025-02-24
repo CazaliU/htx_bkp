@@ -22,6 +22,7 @@ class DadosIntegrantes(Base):
     status = Column(String)
     inclusao = Column(String)
     vigencia = Column(String)
+    exclusao = Column(String)
     razao_social = Column(String)
     cnpj = Column(String, unique=True)  # Adiciona a restrição de unicidade
     nome = Column(String)
@@ -56,9 +57,10 @@ class DadosIntegrantes(Base):
     metodo_cobranca = Column(String)
     indice_participacao = Column(String)
     integracao_trackbrasil = Column(String)
+    estado_grupo = Column(String)
 
     __table_args__ = (
-        UniqueConstraint('cnpj', name='uq_cnpj'),  # Define a restrição de unicidade
+        UniqueConstraint('cnpj', 'estado_grupo', name='uq_cnpj_estado_grupo'),  # Define a restrição de unicidade composta
     )
 
 
