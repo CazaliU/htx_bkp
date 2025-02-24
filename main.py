@@ -91,7 +91,6 @@ try:
     # Pegando o texto da primeira ocorrência
     if valor_cota_element:
         valor_cota = valor_cota_element[0].get_text(strip=True)
-        print(valor_cota)  # Resultado: 0,00
 
     print(f"Status: {status}")
     print(f"Inclusão: {inclusao}")
