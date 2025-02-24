@@ -36,7 +36,7 @@ password_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Senha"
 submit_button = driver.find_element(By.CSS_SELECTOR, 'input[type="submit"]')
 
 username_input.send_keys('grconsulta')  # Substitua pelo seu nome de usuário
-password_input.send_keys('Grupo.Track2024')  # Substitua pela sua senha
+password_input.send_keys('trackgr2025')  # Substitua pela sua senha
 submit_button.click()
 
 # Aguarde a página carregar
@@ -62,6 +62,9 @@ try:
     status = None
     inclusao = None
     exclusao = None
+    valor_cota = None
+
+    
 
     # Tenta encontrar o elemento com a classe 'label label-success'
     status_element = soup.find('div', class_='label label-success')
@@ -69,7 +72,6 @@ try:
     # Se não encontrar, tenta encontrar o elemento com a classe 'label label-danger'
     if not status_element:
         status_element = soup.find('div', class_='label label-danger')
-        exclusao = soup.find('div', class_='sub_status').find_all('span')[1].next_sibling.strip()
 
     # Define o valor de 'status' com base no elemento encontrado
     if status_element:
@@ -77,28 +79,25 @@ try:
     else:
         status = 'Status não encontrado'
 
+    # Captura os dados de inclusão e exclusão do contrato
+    sub_status_elements = soup.find('div', class_='sub_status').find_all('span')
+    if len(sub_status_elements) >= 1:
+        inclusao = sub_status_elements[0].next_sibling.strip()
+        if len(sub_status_elements) > 1:
+            exclusao = sub_status_elements[1].next_sibling.strip()
+            
+    # Encontrar todas as tags <span> com a classe 'label label-grey'
+    valor_cota_element = soup.find_all('span', class_='label label-grey')
 
+    # Pegando o texto da primeira ocorrência
+    if valor_cota_element:
+        valor_cota = valor_cota_element[0].get_text(strip=True)
+        print(valor_cota)  # Resultado: 0,00
 
-    # Captura os dados de status, inclusão e vigência do contrato
-    inclusao = soup.find('div', class_='sub_status').find_all('span')[0].next_sibling.strip()
-    # exclusao = soup.find('div', class_='sub_status').find_all('span')[1].next_sibling.strip()
-    
-    
-    ul_element = soup.find('ul', class_='lateral-tabs')
-    ano_modelo = None
-    # Iterar sobre os elementos <li> dentro da <ul>
-    for li in ul_element.find_all('li'):
-        ano_modelo_atual = li.get('ano_modelo')
-        if ano_modelo_atual:
-            ano_modelo = ano_modelo_atual
-
-    
-    
     print(f"Status: {status}")
-    print(f"Ano Modelo: {ano_modelo}")
     print(f"Inclusão: {inclusao}")
     print(f"Exclusão: {exclusao}")
-
+    print(f"Valor da Cota: {valor_cota}")
 
 
     elementos = soup.find_all('div', class_=['twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button'])
@@ -138,10 +137,6 @@ try:
     ultima_vistoria = None
     monitoramento = None
     
-    Session = sessionmaker(bind=engine)
-    Session = Session()
-    
-
     for elemento in elementos:
         texto = elemento.text.strip()
         if texto.startswith("Integrante:"):
@@ -248,62 +243,6 @@ try:
     print(f"Bloqueadores: {bloqueadores}")
     print(f"Última Vistoria: {ultima_vistoria}")
     print(f"Monitoramento: {monitoramento}")
-
-    try:
-        integrante_obj = Session.query(DadosIntegrantes).filter_by(razao_social=integrante).first()
-        
-        if integrante_obj:
-            id_integrante = integrante_obj.id
-            print(f"ID do integrante: {id_integrante}")
-        else:
-            id_integrante = None
-            print(f"Integrante com razão social '{integrante}' não encontrado no banco de dados.")
-    except Exception as e:
-        id_integrante = None
-        print(f"Erro ao localizar os dados do integrante: {e}")
-
-
-    novo_dado = VeiculosIntegrantes(
-        id_integrante=id_integrante, 
-        status=status,
-        inclusao=inclusao,
-        exclusao=exclusao,
-        tipo=tipo,
-        especie=especie,
-        composicao =  composicao,
-        cod_fipe = cod_fipe,
-        valor_principal = valor_principal,
-        agregado = agregado,
-        indice_participacao = indice_participacao,
-        valores_referencia = valores_referencia,
-        marca = marca,
-        modelo = modelo,
-        placa = placa,
-        ano_fabricacao = ano_fabricacao,
-        ano_modelo = ano_modelo,
-        renavam = renavam,
-        chassi = chassi,
-        cor = cor,
-        estado = estado,
-        cidade = cidade,
-        proprietario = proprietario,
-        documento = documento,
-        carroceria = carroceria,
-        cap_max_carga = cap_max_carga,
-        peso_bruto_total = peso_bruto_total,
-        cap_max_tracao = cap_max_tracao,
-        num_motor = num_motor,
-        potencia = potencia,
-        lotacao = lotacao,
-        eixos = eixos,
-        num_crv = num_crv,
-        num_seg_cla = num_seg_cla,
-        rastreadores = rastreadores,
-        bloqueadores = bloqueadores,
-        ultima_vistoria = ultima_vistoria,
-        monitoramento = monitoramento
-    )
-
 
 
 except Exception as e:

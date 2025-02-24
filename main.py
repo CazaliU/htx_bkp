@@ -4,27 +4,15 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
-from sql import engine, DadosIntegrantes
-from sqlalchemy.orm import sessionmaker
+from sql import engine, VeiculosIntegrantes, DadosIntegrantes
+from sqlalchemy.orm import sessionmaker, session
 from selenium import webdriver
-from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 import pyautogui
 import time
 import os
 
-# Carregar as variáveis de ambiente do arquivo .env
-load_dotenv()
 
-# Obter as credenciais a partir das variáveis de ambiente
-username = os.getenv('APP_USERNAME')
-password = os.getenv('APP_PASSWORD')
-
-# BOTAO VER INICIAL
-x1, y1 = 46, 540
-
-# NUMERO DE INTEGRANTES
-num_insertes = 5000
 
 # Configura o caminho para o ChromeDriver
 chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
@@ -47,37 +35,20 @@ username_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Usuár
 password_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Senha"]')
 submit_button = driver.find_element(By.CSS_SELECTOR, 'input[type="submit"]')
 
-username_input.send_keys(username)  # Substitua pelo seu nome de usuário
-password_input.send_keys(password)  # Substitua pela sua senha
+username_input.send_keys('grconsulta')  # Substitua pelo seu nome de usuário
+password_input.send_keys('trackgr2025')  # Substitua pela sua senha
 submit_button.click()
 
 # Aguarde a página carregar
-time.sleep(3)  # Pode ser necessário ajustar o tempo
+time.sleep(5)  # Pode ser necessário ajustar o tempo
 
 # Navega para a página onde está o status
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  # Substitua pela URL real da página
 
 # Aguarde a página carregar
-time.sleep(15)  
+time.sleep(10)  
 
-j = 0
-for i in range(0, num_insertes + 1):
-    
-    # verifica se a iteração é divisivel por 10
-    if j == 10:
-        pyautogui.click(1835, 957)
-        time.sleep(3)
-        x1, y1 = 46, 540
-        j=0
-        
-        if i > 63:
-            break
-        
-    # CLICA NO VER
-    pyautogui.click(x1, y1)
-
-    time.sleep(3)
-
+try:
     # Espera até que o modal esteja visível
     modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
     driver.implicitly_wait(10)  # Espera implícita para o modal
@@ -90,227 +61,193 @@ for i in range(0, num_insertes + 1):
 
     status = None
     inclusao = None
-    vigencia = None
     exclusao = None
+    valor_cota = None
 
-    # Tentar encontrar o elemento com a classe 'label label-success'
+    
+
+    # Tenta encontrar o elemento com a classe 'label label-success'
     status_element = soup.find('div', class_='label label-success')
 
-    if status_element is not None:
+    # Se não encontrar, tenta encontrar o elemento com a classe 'label label-danger'
+    if not status_element:
+        status_element = soup.find('div', class_='label label-danger')
+
+    # Define o valor de 'status' com base no elemento encontrado
+    if status_element:
         status = status_element.text.strip()
     else:
-        # Se não encontrar 'label label-success', tentar encontrar 'label label-danger'
-        status_element = soup.find('div', class_='label label-danger')
-        if status_element is not None:
-            status = status_element.text.strip()
-        else:
-            # Tratar a situação quando nenhum dos elementos é encontrado
-            status = "Status não encontrado" 
+        status = 'Status não encontrado'
 
-    inclusao = soup.find('div', class_='sub_status').find_all('span')[0].next_sibling.strip()
-    tipo_vigencia_ou_exclusao = soup.find('div', class_='sub_status').find_all('span')[1].text.strip()
-    vigencia_ou_exclusao = soup.find('div', class_='sub_status').find_all('span')[1].next_sibling.strip()
+    # Captura os dados de inclusão e exclusão do contrato
+    sub_status_elements = soup.find('div', class_='sub_status').find_all('span')
+    if len(sub_status_elements) >= 1:
+        inclusao = sub_status_elements[0].next_sibling.strip()
+        if len(sub_status_elements) > 1:
+            exclusao = sub_status_elements[1].next_sibling.strip()
+            
+    # Encontrar todas as tags <span> com a classe 'label label-grey'
+    valor_cota_element = soup.find_all('span', class_='label label-grey')
 
-    if "Vigência do Contrato" in tipo_vigencia_ou_exclusao:
-        vigencia = vigencia_ou_exclusao
-    else:
-        exclusao = vigencia_ou_exclusao
+    # Pegando o texto da primeira ocorrência
+    if valor_cota_element:
+        valor_cota = valor_cota_element[0].get_text(strip=True)
+        print(valor_cota)  # Resultado: 0,00
 
+    print(f"Status: {status}")
     print(f"Inclusão: {inclusao}")
-    print(f"{tipo_vigencia_ou_exclusao}: {vigencia_ou_exclusao}")
+    print(f"Exclusão: {exclusao}")
+    print(f"Valor da Cota: {valor_cota}")
 
-    # Captura múltiplos elementos de endereço
-    logradouro_elements = soup.find_all('div', class_='six columns fv')
 
-    # Inicializa variáveis para armazenar os valores
-    logradouros = []
-    numeros = []
-    bairros = []
-    ceps = []
-    complementos = []
-    referencias = []
-    estados = []
-    cidades = []
-
-    # Itera sobre os elementos e armazena os valores nas listas
-    for element in logradouro_elements:
-        label = element.find('b').get_text(strip=True)
-        value = element.get_text(strip=True).replace(label, '').strip()
-        
-        if 'Logradouro' in label:
-            logradouros.append(value)
-        elif 'Número' in label:
-            numeros.append(value)
-        elif 'Bairro' in label:
-            bairros.append(value)
-        elif 'CEP' in label:
-            ceps.append(value)
-        elif 'Complemento' in label:
-            complementos.append(value)
-        elif 'Referência' in label:
-            referencias.append(value)
-        elif 'Estado' in label:
-            estados.append(value)
-        elif 'Cidade' in label:
-            cidades.append(value)
-
-    # Captura a Razão Social, CNPJ, Nome, Nacionalidade, Estado Civil, Profissão, RG, Orgão Exp, CPF e Nascimento
-    elementos = soup.find_all('div', class_='six columns fv')
-    razao_social = None
-    cnpj = None
-    nome = None
-    nacionalidade = None
-    estado_civil = None
-    profissao = None
-    rg = None
-    orgao_exp = None
-    cpf = None
-    nascimento = None
-    celular_preferencial = None
-    celular_complementar = None
-    telefone = None
-    email = None
-    vigencia_contrato = None
-    metodo_cobranca = None
+    elementos = soup.find_all('div', class_=['twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button'])
+    integrante = None
+    tipo = None
+    especie = None
+    composicao = None
+    cod_fipe = None
+    valor_principal = None
+    agregado = None
     indice_participacao = None
-    integracao_trackbrasil = None
-    estado_grupo = 'Grande SP'
+    valores_referencia = None
+    marca = None
+    modelo = None
+    placa = None
+    ano_fabricacao = None
+    ano_modelo = None
+    renavam = None
+    chassi = None
+    cor = None
+    estado = None
+    cidade = None
+    proprietario = None
+    documento = None
+    carroceria = None
+    cap_max_carga = None
+    peso_bruto_total = None
+    cap_max_tracao = None
+    num_motor = None
+    potencia = None
+    lotacao = None
+    eixos = None
+    num_crv = None
+    num_seg_cla = None
+    rastreadores = None
+    bloqueadores = None
+    ultima_vistoria = None
+    monitoramento = None
     
     for elemento in elementos:
         texto = elemento.text.strip()
-        if texto.startswith("Razão Social:"):
-            razao_social = texto.replace("Razão Social:", "").strip()
-        elif texto.startswith("CNPJ:"):
-            cnpj = texto.replace("CNPJ:", "").strip()
-        elif texto.startswith("Nome:"):
-            nome = texto.replace("Nome:", "").strip()
-        elif texto.startswith("Nacionalidade:"):
-            nacionalidade = texto.replace("Nacionalidade:", "").strip()
-        elif texto.startswith("Estado Civil:"):
-            estado_civil = texto.replace("Estado Civil:", "").strip()
-        elif texto.startswith("Profissão:"):
-            profissao = texto.replace("Profissão:", "").strip()
-        elif texto.startswith("RG:"):
-            rg = texto.replace("RG:", "").strip()
-        elif texto.startswith("Orgão Exp:"):
-            orgao_exp = texto.replace("Orgão Exp:", "").strip()
-        elif texto.startswith("CPF:"):
-            cpf = texto.replace("CPF:", "").strip()
-        elif texto.startswith("Nascimento:"):
-            nascimento = texto.replace("Nascimento:", "").strip()
-        elif texto.startswith("Celular Preferencial:"):
-            celular_preferencial = texto.replace("Celular Preferencial:", "").strip()
-        elif texto.startswith("Celular Complementar:"):
-            celular_complementar = texto.replace("Celular Complementar:", "").strip()
-        elif texto.startswith("Telefone:"):
-            telefone = texto.replace("Telefone:", "").strip()
-        elif texto.startswith("E-mail:"):
-            email = texto.replace("E-mail:", "").strip()
-        elif texto.startswith("Vigência do Contrato:"):
-            vigencia_contrato = texto.replace("Vigência do Contrato:", "").strip()
-        elif texto.startswith("Método de Cobrança:"):
-            metodo_cobranca = texto.replace("Método de Cobrança:", "").strip()
-        elif texto.startswith("Índice de Participação Padrão:"):
-            indice_participacao = texto.replace("Índice de Participação Padrão:", "").strip()
-        elif texto.startswith("Integração TrackBrasil:"):
-            integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
+        if texto.startswith("Integrante:"):
+            integrante = texto.replace("Integrante:", "").strip()
+        elif texto.startswith("Tipo:"):
+            tipo = texto.replace("Tipo:", "").strip()
+        elif texto.startswith("Espécie:"):
+            especie = texto.replace("Espécie:", "").strip()
+        elif texto.startswith("Composição:"):
+            composicao = texto.replace("Composição:", "").strip()
+        elif texto.startswith("Cod. Fipe:"):
+            cod_fipe = texto.replace("Cod. Fipe:", "").strip()
+        elif texto.startswith("Valor Principal:"):
+            valor_principal = texto.replace("Valor Principal:", "").strip()
+        elif texto.startswith("Agregado:"):
+            agregado = texto.replace("Agregado:", "").strip()
+        elif texto.startswith("Índice de Participação:"):
+            indice_participacao = texto.replace("Índice de Participação:", "").strip()
+        elif texto.startswith("Marca:"):
+            marca = texto.replace("Marca:", "").strip()
+        elif texto.startswith("Modelo:"):
+            modelo = texto.replace("Modelo:", "").strip()
+        elif texto.startswith("Placa:"):
+            placa = texto.replace("Placa:", "").strip()
+        elif texto.startswith("Ano Fabricação:"):
+            ano_fabricacao = texto.replace("Ano Fabricação:", "").strip()
+        elif texto.startswith("Ano Modelo:"):
+            ano_modelo = texto.replace("Ano Modelo:", "").strip()
+        elif texto.startswith("Renavam:"):
+            renavam = texto.replace("Renavam:", "").strip()
+        elif texto.startswith("Chassi:"):
+            chassi = texto.replace("Chassi:", "").strip()
+        elif texto.startswith("Cor:"):
+            cor = texto.replace("Cor:", "").strip()
+        elif texto.startswith("Estado:"):
+            estado = texto.replace("Estado:", "").strip()
+        elif texto.startswith("Cidade:"):
+            cidade = texto.replace("Cidade:", "").strip()
+        elif texto.startswith("Proprietário:"):
+            proprietario = texto.replace("Proprietário:", "").strip()
+        elif texto.startswith("Documento:"):
+            documento = texto.replace("Documento:", "").strip()
+        elif texto.startswith("Carroceria:"):
+            carroceria = texto.replace("Carroceria:", "").strip()
+        elif texto.startswith("Cap. Max. Carga:"):
+            cap_max_carga = texto.replace("Cap. Max. Carga:", "").strip()
+        elif texto.startswith("Peso Bruto Total:"):
+            peso_bruto_total = texto.replace("Peso Bruto Total:", "").strip()
+        elif texto.startswith("Cap. Max. Tração:"):
+            cap_max_tracao = texto.replace("Cap. Max. Tração:", "").strip()
+        elif texto.startswith("N°. Motor:"):
+            num_motor = texto.replace("N°. Motor:", "").strip()
+        elif texto.startswith("Potência:"):
+            potencia = texto.replace("Potência:", "").strip()
+        elif texto.startswith("Lotação:"):
+            lotacao = texto.replace("Lotação:", "").strip()
+        elif texto.startswith("Eixos:"):
+            eixos = texto.replace("Eixos:", "").strip()
+        elif texto.startswith("Nº. CRV:"):
+            num_crv = texto.replace("Nº. CRV:", "").strip()
+        elif texto.startswith("Nº. Seg. CLA:"):
+            num_seg_cla = texto.replace("Nº. Seg. CLA:", "").strip()
+        elif texto.startswith("Rastreadores:"):
+            rastreadores = texto.replace("Rastreadores:", "").strip()
+        elif texto.startswith("Bloqueadores:"):
+            bloqueadores = texto.replace("Bloqueadores:", "").strip()
+        elif texto.startswith("Última Vistoria:"):
+            ultima_vistoria = texto.replace("Última Vistoria:", "").strip()
+        elif texto.startswith("Monitoramento:"):
+            monitoramento = texto.replace("Monitoramento:", "").strip()
+
+    print(f"Integrante: {integrante}")
+    print(f"Tipo: {tipo}")
+    print(f"Espécie: {especie}")
+    print(f"Composição: {composicao}")
+    print(f"Cod. Fipe: {cod_fipe}")
+    print(f"Valor Principal: {valor_principal}")
+    print(f"Agregado: {agregado}")
+    print(f"Índice de Participação: {indice_participacao}")
+    print(f"Valores de Referência: {valores_referencia}")
+    print(f"Marca: {marca}")
+    print(f"Modelo: {modelo}")
+    print(f"Placa: {placa}")
+    print(f"Ano Fabricação: {ano_fabricacao}")
+    print(f"Ano Modelo: {ano_modelo}")
+    print(f"Renavam: {renavam}")
+    print(f"Chassi: {chassi}")
+    print(f"Cor: {cor}")
+    print(f"Estado: {estado}")
+    print(f"Cidade: {cidade}")
+    print(f"Proprietário: {proprietario}")
+    print(f"Documento: {documento}")
+    print(f"Carroceria: {carroceria}")
+    print(f"Cap. Max. Carga: {cap_max_carga}")
+    print(f"Peso Bruto Total: {peso_bruto_total}")
+    print(f"Cap. Max. Tração: {cap_max_tracao}")
+    print(f"N°. Motor: {num_motor}")
+    print(f"Potência: {potencia}")
+    print(f"Lotação: {lotacao}")
+    print(f"Eixos: {eixos}")
+    print(f"Nº. CRV: {num_crv}")
+    print(f"Nº. Seg. CLA: {num_seg_cla}")
+    print(f"Rastreadores: {rastreadores}")
+    print(f"Bloqueadores: {bloqueadores}")
+    print(f"Última Vistoria: {ultima_vistoria}")
+    print(f"Monitoramento: {monitoramento}")
 
 
-    # Criar sessão
-    Session = sessionmaker(bind=engine)
-    session = Session()
+except Exception as e:
+    print(f"Erro ao localizar os dados: {e}")
 
-    # Verificar se o cliente já está cadastrado
-    cliente_existente = session.query(DadosIntegrantes).filter_by(cnpj=cnpj, estado_grupo=estado_grupo).first()
-    if cliente_existente:
-        print(f"Cliente com CNPJ {cnpj} e Estado Grupo {estado_grupo} já está cadastrado. Pulando para o próximo.")
-        # FECHA
-        pyautogui.click(1813, 193)
-        time.sleep(3)
-        j += 1
-        y1 = y1 + 41
-        continue
-
-    # Itera sobre os valores capturados e insere no banco de dados
-    for i in range(0, len(logradouros), 2):
-        logradouro1 = logradouros[i] if i < len(logradouros) else None
-        numero1 = numeros[i] if i < len(numeros) else None
-        bairro1 = bairros[i] if i < len(bairros) else None
-        cep1 = ceps[i] if i < len(ceps) else None
-        complemento1 = complementos[i] if i < len(complementos) else None
-        referencia1 = referencias[i] if i < len(referencias) else None
-        estado1 = estados[i] if i < len(estados) else None
-        cidade1 = cidades[i] if i < len(cidades) else None
-
-        logradouro2 = logradouros[i+1] if i+1 < len(logradouros) else None
-        numero2 = numeros[i+1] if i+1 < len(numeros) else None
-        bairro2 = bairros[i+1] if i+1 < len(bairros) else None
-        cep2 = ceps[i+1] if i+1 < len(ceps) else None
-        complemento2 = complementos[i+1] if i+1 < len(complementos) else None
-        referencia2 = referencias[i+1] if i+1 < len(referencias) else None
-        estado2 = estados[i+1] if i+1 < len(estados) else None
-        cidade2 = cidades[i+1] if i+1 < len(cidades) else None
-
-        novo_dado = DadosIntegrantes(
-            status=status,
-            inclusao=inclusao,
-            vigencia=vigencia,
-            exclusao=exclusao,
-            razao_social=razao_social,
-            cnpj=cnpj,
-            nome=nome,
-            nacionalidade=nacionalidade,
-            estado_civil=estado_civil,
-            profissao=profissao,
-            rg=rg,
-            orgao_exp=orgao_exp,
-            cpf=cpf,
-            nascimento=nascimento,
-            logradouro1=logradouro1,
-            numero1=numero1,
-            bairro1=bairro1,
-            cep1=cep1,
-            complemento1=complemento1,
-            referencia1=referencia1,
-            estado1=estado1,
-            cidade1=cidade1,
-            logradouro2=logradouro2,
-            numero2=numero2,
-            bairro2=bairro2,
-            cep2=cep2,
-            complemento2=complemento2,
-            referencia2=referencia2,
-            estado2=estado2,
-            cidade2=cidade2,
-            celular_preferencial=celular_preferencial,
-            celular_complementar=celular_complementar,
-            telefone=telefone,
-            email=email,
-            vigencia_contrato=vigencia_contrato,
-            metodo_cobranca=metodo_cobranca,
-            indice_participacao=indice_participacao,
-            integracao_trackbrasil=integracao_trackbrasil,
-            estado_grupo=estado_grupo
-        )
-
-        try: 
-            # Adicionar e confirmar a transação
-            session.add(novo_dado)
-            session.commit()
-        except IntegrityError as e:
-            if 'uq_cnpj_estado_grupo' in str(e.orig):
-                print(f"Erro: O CNPJ {novo_dado.cnpj} e Estado Grupo {novo_dado.estado_grupo} já existem no banco de dados.")
-            else:
-                print(f"Erro de integridade: {e}")
-            session.rollback()
-
-    time.sleep(4)
-    
-    # FECHA
-    pyautogui.click(1813, 193)
-    
-    time.sleep(3)
-    
-    j += 1
-    i += 1
-    y1 = y1 + 41
+finally:
+    # Fecha o navegador
+    driver.quit()
