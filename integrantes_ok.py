@@ -70,7 +70,7 @@ for i in range(0, num_insertes + 1):
         x1, y1 = 46, 540
         j=0
         
-        if i > 63:
+        if i > 420:
             break
         
     # CLICA NO VER
@@ -174,7 +174,7 @@ for i in range(0, num_insertes + 1):
     metodo_cobranca = None
     indice_participacao = None
     integracao_trackbrasil = None
-    estado_grupo = 'Grande SP'
+    estado_grupo = 'Grande Oeste'
     
     for elemento in elementos:
         texto = elemento.text.strip()
@@ -221,9 +221,9 @@ for i in range(0, num_insertes + 1):
     session = Session()
 
     # Verificar se o cliente já está cadastrado
-    cliente_existente = session.query(DadosIntegrantes).filter_by(cnpj=cnpj, estado_grupo=estado_grupo).first()
+    cliente_existente = session.query(DadosIntegrantes).filter_by(cnpj=cnpj, estado_grupo=estado_grupo, cpf=cpf).first()
     if cliente_existente:
-        print(f"Cliente com CNPJ {cnpj} e Estado Grupo {estado_grupo} já está cadastrado. Pulando para o próximo.")
+        print(f"Cliente com CNPJ {cnpj}, estado Grupo {estado_grupo} e cpf {cpf} já está cadastrado. Pulando para o próximo.")
         # FECHA
         pyautogui.click(1813, 193)
         time.sleep(3)
@@ -299,7 +299,7 @@ for i in range(0, num_insertes + 1):
             session.commit()
         except IntegrityError as e:
             if 'uq_cnpj_estado_grupo' in str(e.orig):
-                print(f"Erro: O CNPJ {novo_dado.cnpj} e Estado Grupo {novo_dado.estado_grupo} já existem no banco de dados.")
+                print(f"Erro: O CNPJ {novo_dado.cnpj}, estado Grupo {novo_dado.estado_grupo} e cpf {novo_dado.cpf} já existem no banco de dados.")
             else:
                 print(f"Erro de integridade: {e}")
             session.rollback()

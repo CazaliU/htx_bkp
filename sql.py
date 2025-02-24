@@ -60,7 +60,7 @@ class DadosIntegrantes(Base):
     estado_grupo = Column(String)
 
     __table_args__ = (
-        UniqueConstraint('cnpj', 'estado_grupo', name='uq_cnpj_estado_grupo'),  # Define a restrição de unicidade composta
+        UniqueConstraint('cnpj', 'estado_grupo', 'cpf', name='uq_cnpj_cpf_estado_grupo'),  # Define a restrição de unicidade composta
     )
 
 

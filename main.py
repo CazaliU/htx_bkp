@@ -98,9 +98,10 @@ try:
     print(f"Inclusão: {inclusao}")
     print(f"Exclusão: {exclusao}")
     print(f"Valor da Cota: {valor_cota}")
-
-
+    
+    # Encontrar todos os elementos com a classe 'twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button'
     elementos = soup.find_all('div', class_=['twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button'])
+    
     integrante = None
     tipo = None
     especie = None
@@ -110,32 +111,6 @@ try:
     agregado = None
     indice_participacao = None
     valores_referencia = None
-    marca = None
-    modelo = None
-    placa = None
-    ano_fabricacao = None
-    ano_modelo = None
-    renavam = None
-    chassi = None
-    cor = None
-    estado = None
-    cidade = None
-    proprietario = None
-    documento = None
-    carroceria = None
-    cap_max_carga = None
-    peso_bruto_total = None
-    cap_max_tracao = None
-    num_motor = None
-    potencia = None
-    lotacao = None
-    eixos = None
-    num_crv = None
-    num_seg_cla = None
-    rastreadores = None
-    bloqueadores = None
-    ultima_vistoria = None
-    monitoramento = None
     
     for elemento in elementos:
         texto = elemento.text.strip()
@@ -155,94 +130,77 @@ try:
             agregado = texto.replace("Agregado:", "").strip()
         elif texto.startswith("Índice de Participação:"):
             indice_participacao = texto.replace("Índice de Participação:", "").strip()
-        elif texto.startswith("Marca:"):
-            marca = texto.replace("Marca:", "").strip()
-        elif texto.startswith("Modelo:"):
-            modelo = texto.replace("Modelo:", "").strip()
-        elif texto.startswith("Placa:"):
-            placa = texto.replace("Placa:", "").strip()
-        elif texto.startswith("Ano Fabricação:"):
-            ano_fabricacao = texto.replace("Ano Fabricação:", "").strip()
-        elif texto.startswith("Ano Modelo:"):
-            ano_modelo = texto.replace("Ano Modelo:", "").strip()
-        elif texto.startswith("Renavam:"):
-            renavam = texto.replace("Renavam:", "").strip()
-        elif texto.startswith("Chassi:"):
-            chassi = texto.replace("Chassi:", "").strip()
-        elif texto.startswith("Cor:"):
-            cor = texto.replace("Cor:", "").strip()
-        elif texto.startswith("Estado:"):
-            estado = texto.replace("Estado:", "").strip()
-        elif texto.startswith("Cidade:"):
-            cidade = texto.replace("Cidade:", "").strip()
-        elif texto.startswith("Proprietário:"):
-            proprietario = texto.replace("Proprietário:", "").strip()
-        elif texto.startswith("Documento:"):
-            documento = texto.replace("Documento:", "").strip()
-        elif texto.startswith("Carroceria:"):
-            carroceria = texto.replace("Carroceria:", "").strip()
-        elif texto.startswith("Cap. Max. Carga:"):
-            cap_max_carga = texto.replace("Cap. Max. Carga:", "").strip()
-        elif texto.startswith("Peso Bruto Total:"):
-            peso_bruto_total = texto.replace("Peso Bruto Total:", "").strip()
-        elif texto.startswith("Cap. Max. Tração:"):
-            cap_max_tracao = texto.replace("Cap. Max. Tração:", "").strip()
-        elif texto.startswith("N°. Motor:"):
-            num_motor = texto.replace("N°. Motor:", "").strip()
-        elif texto.startswith("Potência:"):
-            potencia = texto.replace("Potência:", "").strip()
-        elif texto.startswith("Lotação:"):
-            lotacao = texto.replace("Lotação:", "").strip()
-        elif texto.startswith("Eixos:"):
-            eixos = texto.replace("Eixos:", "").strip()
-        elif texto.startswith("Nº. CRV:"):
-            num_crv = texto.replace("Nº. CRV:", "").strip()
-        elif texto.startswith("Nº. Seg. CLA:"):
-            num_seg_cla = texto.replace("Nº. Seg. CLA:", "").strip()
-        elif texto.startswith("Rastreadores:"):
-            rastreadores = texto.replace("Rastreadores:", "").strip()
-        elif texto.startswith("Bloqueadores:"):
-            bloqueadores = texto.replace("Bloqueadores:", "").strip()
-        elif texto.startswith("Última Vistoria:"):
-            ultima_vistoria = texto.replace("Última Vistoria:", "").strip()
-        elif texto.startswith("Monitoramento:"):
-            monitoramento = texto.replace("Monitoramento:", "").strip()
 
-    print(f"Integrante: {integrante}")
-    print(f"Tipo: {tipo}")
-    print(f"Espécie: {especie}")
-    print(f"Composição: {composicao}")
-    print(f"Cod. Fipe: {cod_fipe}")
-    print(f"Valor Principal: {valor_principal}")
-    print(f"Agregado: {agregado}")
-    print(f"Índice de Participação: {indice_participacao}")
-    print(f"Valores de Referência: {valores_referencia}")
-    print(f"Marca: {marca}")
-    print(f"Modelo: {modelo}")
-    print(f"Placa: {placa}")
-    print(f"Ano Fabricação: {ano_fabricacao}")
-    print(f"Ano Modelo: {ano_modelo}")
-    print(f"Renavam: {renavam}")
-    print(f"Chassi: {chassi}")
-    print(f"Cor: {cor}")
-    print(f"Estado: {estado}")
-    print(f"Cidade: {cidade}")
-    print(f"Proprietário: {proprietario}")
-    print(f"Documento: {documento}")
-    print(f"Carroceria: {carroceria}")
-    print(f"Cap. Max. Carga: {cap_max_carga}")
-    print(f"Peso Bruto Total: {peso_bruto_total}")
-    print(f"Cap. Max. Tração: {cap_max_tracao}")
-    print(f"N°. Motor: {num_motor}")
-    print(f"Potência: {potencia}")
-    print(f"Lotação: {lotacao}")
-    print(f"Eixos: {eixos}")
-    print(f"Nº. CRV: {num_crv}")
-    print(f"Nº. Seg. CLA: {num_seg_cla}")
-    print(f"Rastreadores: {rastreadores}")
-    print(f"Bloqueadores: {bloqueadores}")
-    print(f"Última Vistoria: {ultima_vistoria}")
-    print(f"Monitoramento: {monitoramento}")
+    
+    # Inicializa dicionário para armazenar os valores
+    dados_veiculo = {
+        "marca": [],
+        "modelo": [],
+        "placa": [],
+        "ano fabricação": [],
+        "ano_modelo": [],
+        "renavam": [],
+        "chassi": [],
+        "cor": [],
+        "estado": [],
+        "cidade": [],
+        "documento": [],
+        "carroceria": [],
+        "cap_max_carga": [],
+        "peso_bruto_total": [],
+        "cap_max_tracao": [],
+        "num_motor": [],
+        "potencia": [],
+        "lotacao": [],
+        "eixos": [],
+        "num_crv": [],
+        "num_seg_cla": [],
+        "rastreadores": [],
+        "bloqueadores": [],
+        "ultima_vistoria": [],
+        "monitoramento": []
+    }
+
+    # Percorre todos os elementos para capturar as informações
+    for elemento in elementos:
+        label_tag = elemento.find('b')
+        
+        if label_tag:
+            label = label_tag.get_text(strip=True).replace(":", "")
+            valor = label_tag.next_sibling.strip() if label_tag.next_sibling else ""
+            
+            if label.lower() in dados_veiculo:
+                dados_veiculo[label.lower()].append(valor)
+
+    # Exibe os resultados
+    print("Marcas encontradas:", dados_veiculo["marca"])
+    print("Modelos encontrados:", dados_veiculo["modelo"])
+    print("Placas encontradas:", dados_veiculo["placa"])
+    print("Ano de Fabricação encontrados:", dados_veiculo["ano fabricação"])
+    print("Ano de Modelo encontrados:", dados_veiculo["ano_modelo"])
+    print("Renavam encontrados:", dados_veiculo["renavam"])
+    print("Chassi encontrados:", dados_veiculo["chassi"])
+    print("Cores encontradas:", dados_veiculo["cor"])
+    print("Estados encontrados:", dados_veiculo["estado"])
+    print("Cidades encontradas:", dados_veiculo["cidade"])
+    print("Documentos encontrados:", dados_veiculo["documento"])
+    print("Carrocerias encontradas:", dados_veiculo["carroceria"])
+    print("Capacidade Máxima de Carga encontradas:", dados_veiculo["cap_max_carga"])
+    print("Peso Bruto Total encontradas:", dados_veiculo["peso_bruto_total"])
+    print("Capacidade Máxima de Tração encontradas:", dados_veiculo["cap_max_tracao"])
+    print("Número do Motor encontrados:", dados_veiculo["num_motor"])
+    print("Potência encontradas:", dados_veiculo["potencia"])
+    print("Lotação encontradas:", dados_veiculo["lotacao"])
+    print("Eixos encontrados:", dados_veiculo["eixos"])
+    print("Número do CRV encontrados:", dados_veiculo["num_crv"])
+    print("Número do Seguro Classe encontrados:", dados_veiculo["num_seg_cla"])
+    print("Rastreadores encontrados:", dados_veiculo["rastreadores"])
+    print("Bloqueadores encontrados:", dados_veiculo["bloqueadores"])
+    print("Última Vistoria encontradas:", dados_veiculo["ultima_vistoria"])
+    print("Monitoramento encontradas:", dados_veiculo["monitoramento"])
+    print("--------------------------------------")
+
+
 
 
 except Exception as e:
