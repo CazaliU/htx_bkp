@@ -160,7 +160,7 @@ class Veiculos(Base):
     veiculos_cl_id = Column(Integer)
 
     __table_args__ = (
-        UniqueConstraint('placa1', 'estado_grupo', name='uq_placa1_estado_grupo'),  # Define a restrição de unicidade composta
+        UniqueConstraint('placa1', 'estado_grupo', 'status', name='uq_placa1_estado_grupo_status'),  # Define a restrição de unicidade composta
     )
 
 # Criar as tabelas no banco de dados
