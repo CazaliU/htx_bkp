@@ -24,10 +24,10 @@ username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
 
 # BOTAO VER INICIAL
-x1, y1 = 43, 585
+x1, y1 = 36, 655
 
 # NUMERO DE INTEGRANTES
-num_insertes = 8000
+num_insertes = 900
 
 # Configura o caminho para o ChromeDriver
 chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
@@ -69,12 +69,12 @@ for i in range(0, num_insertes + 1):
     # verifica se a iteração é divisivel por 10
     if j == 10:
         #proximo
-        pyautogui.click(1837, 968)
+        pyautogui.click(1845, 972)
         time.sleep(3)
-        x1, y1 = 43, 585
+        x1, y1 = 36, 655
         j=0
         
-        if i > 8000:
+        if i > 900:
             break
         
     # CLICA NO VER
@@ -136,7 +136,7 @@ for i in range(0, num_insertes + 1):
     valor_principal = None
     agregado = None
     indice_participacao = None
-    estado_grupo = 'Grande Oeste'
+    estado_grupo = 'Grande SP'
 
     for elemento in elementos:
         texto = elemento.text.strip()
@@ -169,6 +169,7 @@ for i in range(0, num_insertes + 1):
         "cor": [],
         "estado": [],
         "cidade": [],
+        "proprietário": [],
         "documento": [],
         "espécie": [],
         "tipo": [],
@@ -256,11 +257,11 @@ for i in range(0, num_insertes + 1):
     placa1_existe = session.query(Veiculos).filter_by(placa1=dados_veiculo["placa"][0], estado_grupo=estado_grupo, status=status).first()
     if placa1_existe:
         print(f"Placa {dados_veiculo['placa'][0]} já está cadastrada no grupo {estado_grupo} com o status {status}.")
-         # FECHA
-        pyautogui.click(1802, 409)
+        # FECHA
+        pyautogui.click(1784, 478)
         time.sleep(3)
         j += 1
-        y1 = y1 + 37
+        y1 = y1 + 31
         continue
     
     
@@ -288,6 +289,7 @@ for i in range(0, num_insertes + 1):
         cor1=empty_to_none(dados_veiculo["cor"][0] if len(dados_veiculo["cor"]) > 0 else None),
         estado1=empty_to_none(dados_veiculo["estado"][0] if len(dados_veiculo["estado"]) > 0 else None),
         cidade1=empty_to_none(dados_veiculo["cidade"][0] if len(dados_veiculo["cidade"]) > 0 else None),
+        proprietario1=empty_to_none(dados_veiculo["proprietário"][0] if len(dados_veiculo["proprietário"]) > 0 else None),
         documento1=empty_to_none(dados_veiculo["documento"][0] if len(dados_veiculo["documento"]) > 0 else None),
         especie1=empty_to_none(dados_veiculo["espécie"][1] if len(dados_veiculo["espécie"]) > 1 else None),
         tipo1=empty_to_none(dados_veiculo["tipo"][1] if len(dados_veiculo["tipo"]) > 1 else None),
@@ -312,6 +314,7 @@ for i in range(0, num_insertes + 1):
         cor2=empty_to_none(dados_veiculo["cor"][1] if len(dados_veiculo["cor"]) > 1 else None),
         estado2=empty_to_none(dados_veiculo["estado"][1] if len(dados_veiculo["estado"]) > 1 else None),
         cidade2=empty_to_none(dados_veiculo["cidade"][1] if len(dados_veiculo["cidade"]) > 1 else None),
+        proprietario2=empty_to_none(dados_veiculo["proprietário"][1] if len(dados_veiculo["proprietário"]) > 1 else None),
         documento2=empty_to_none(dados_veiculo["documento"][1] if len(dados_veiculo["documento"]) > 1 else None),
         especie2=empty_to_none(dados_veiculo["espécie"][2] if len(dados_veiculo["espécie"]) > 2 else None),
         tipo2=empty_to_none(dados_veiculo["tipo"][2] if len(dados_veiculo["tipo"]) > 2 else None),
@@ -336,6 +339,7 @@ for i in range(0, num_insertes + 1):
         cor3=empty_to_none(dados_veiculo["cor"][2] if len(dados_veiculo["cor"]) > 2 else None),
         estado3=empty_to_none(dados_veiculo["estado"][2] if len(dados_veiculo["estado"]) > 2 else None),
         cidade3=empty_to_none(dados_veiculo["cidade"][2] if len(dados_veiculo["cidade"]) > 2 else None),
+        proprietario3=empty_to_none(dados_veiculo["proprietário"][2] if len(dados_veiculo["proprietário"]) > 2 else None),
         documento3=empty_to_none(dados_veiculo["documento"][2] if len(dados_veiculo["documento"]) > 2 else None),
         especie3=empty_to_none(dados_veiculo["espécie"][3] if len(dados_veiculo["espécie"]) > 3 else None),
         tipo3=empty_to_none(dados_veiculo["tipo"][3] if len(dados_veiculo["tipo"]) > 3 else None),
@@ -374,11 +378,11 @@ for i in range(0, num_insertes + 1):
     print(f"Veículo {dados_veiculo['placa'][0]} inserido com sucesso.")
     
     # FECHA
-    pyautogui.click(1802, 409)
+    pyautogui.click(1784, 478)
     
     time.sleep(3)
     
     j += 1
     i += 1
-    y1 = y1 + 37
+    y1 = y1 + 31
 
