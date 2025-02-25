@@ -61,7 +61,7 @@ time.sleep(3)  # Pode ser necessário ajustar o tempo
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  # Substitua pela URL real da página
 
 # Aguarde a página carregar
-time.sleep(10)  
+time.sleep(15)  
 
 j = 0
 for i in range(0, num_insertes + 1):
@@ -70,7 +70,7 @@ for i in range(0, num_insertes + 1):
     if j == 10:
         #proximo
         pyautogui.click(1845, 972)
-        time.sleep(3)
+        time.sleep(2)
         x1, y1 = 36, 655
         j=0
         
@@ -80,7 +80,7 @@ for i in range(0, num_insertes + 1):
     # CLICA NO VER
     pyautogui.click(x1, y1)
 
-    time.sleep(3)
+    time.sleep(2)
     
     # Espera até que o modal esteja visível
     modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
@@ -259,7 +259,7 @@ for i in range(0, num_insertes + 1):
         print(f"Placa {dados_veiculo['placa'][0]} já está cadastrada no grupo {estado_grupo} com o status {status}.")
         # FECHA
         pyautogui.click(1784, 478)
-        time.sleep(3)
+        time.sleep(1)
         j += 1
         y1 = y1 + 31
         continue
@@ -373,14 +373,14 @@ for i in range(0, num_insertes + 1):
             print(f"Erro ao inserir o veículo: {e}")
         session.rollback()
 
-    time.sleep(5)
+    time.sleep(1)
     
     print(f"Veículo {dados_veiculo['placa'][0]} inserido com sucesso.")
     
     # FECHA
     pyautogui.click(1784, 478)
     
-    time.sleep(3)
+    time.sleep(1)
     
     j += 1
     i += 1
