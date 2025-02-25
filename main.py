@@ -23,6 +23,12 @@ def empty_to_none(value):
 username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
 
+# BOTAO VER INICIAL
+x1, y1 = 43, 585
+
+# NUMERO DE INTEGRANTES
+num_insertes = 8000
+
 # Configura o caminho para o ChromeDriver
 chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
 
@@ -48,9 +54,8 @@ username_input.send_keys(username)  # Substitua pelo seu nome de usuário
 password_input.send_keys(password)  # Substitua pela sua senha
 submit_button.click()
 
-
 # Aguarde a página carregar
-time.sleep(5)  # Pode ser necessário ajustar o tempo
+time.sleep(3)  # Pode ser necessário ajustar o tempo
 
 # Navega para a página onde está o status
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  # Substitua pela URL real da página
@@ -58,7 +63,25 @@ driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativ
 # Aguarde a página carregar
 time.sleep(10)  
 
-try:
+j = 0
+for i in range(0, num_insertes + 1):
+    
+    # verifica se a iteração é divisivel por 10
+    if j == 10:
+        #proximo
+        pyautogui.click(1837, 968)
+        time.sleep(3)
+        x1, y1 = 43, 585
+        j=0
+        
+        if i > 8000:
+            break
+        
+    # CLICA NO VER
+    pyautogui.click(x1, y1)
+
+    time.sleep(3)
+    
     # Espera até que o modal esteja visível
     modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
     driver.implicitly_wait(10)  # Espera implícita para o modal
@@ -233,7 +256,12 @@ try:
     placa1_existe = session.query(Veiculos).filter_by(placa1=dados_veiculo["placa"][0], estado_grupo=estado_grupo, status=status).first()
     if placa1_existe:
         print(f"Placa {dados_veiculo['placa'][0]} já está cadastrada no grupo {estado_grupo} com o status {status}.")
-        exit()
+         # FECHA
+        pyautogui.click(1802, 409)
+        time.sleep(3)
+        j += 1
+        y1 = y1 + 37
+        continue
     
     
     # Cria uma instância da classe Veiculos
@@ -335,16 +363,22 @@ try:
         session.add(veiculo)
         session.commit()
     except IntegrityError as e:
+        if 'uq_placa1_estado_grupo_status' in str(e):
+            print(f"Placa {dados_veiculo['placa'][0]} já está cadastrada no grupo {estado_grupo} com o status {status}.")
+        else:
+            print(f"Erro ao inserir o veículo: {e}")
         session.rollback()
-        print(f"Erro ao inserir no banco de dados: {e}")
 
-    # Fecha a sessão
-    session.close()
-                
+    time.sleep(5)
+    
+    print(f"Veículo {dados_veiculo['placa'][0]} inserido com sucesso.")
+    
+    # FECHA
+    pyautogui.click(1802, 409)
+    
+    time.sleep(3)
+    
+    j += 1
+    i += 1
+    y1 = y1 + 37
 
-except Exception as e:
-    print(f"Erro ao localizar os dados: {e}")
-
-finally:
-    # Fecha o navegador
-    driver.quit()
