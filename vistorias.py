@@ -13,21 +13,10 @@ import pyautogui
 import time
 import os
 
-load_dotenv()
-
-# Função auxiliar para retornar None se o valor for uma string vazia
-def empty_to_none(value):
-    return value if value else None
 
 # Obter as credenciais a partir das variáveis de ambiente
 username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
-
-# BOTAO VER INICIAL
-x1, y1 = 36, 655
-
-# NUMERO DE INTEGRANTES
-num_insertes = 9000
 
 # Configura o caminho para o ChromeDriver
 chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
@@ -63,233 +52,73 @@ driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativ
 # Aguarde a página carregar
 # time.sleep(180)  
 
-j = 0
-for i in range(0, num_insertes + 1):
+time.sleep(10)
+
+# Espera até que o modal esteja visível
+modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
+driver.implicitly_wait(10)  # Espera implícita para o modal
+
+# Extrai o HTML da página
+html = driver.page_source
+
+# Analisa o HTML com BeautifulSoup
+soup = BeautifulSoup(html, 'html.parser')
+
+# Lista para armazenar as informações de todas as vistorias
+vistorias = []
+
+# Encontra todas as divs com a classe 'subport default listar_anexos'
+vistoria_divs = soup.find_all('div', class_='subport default listar_anexos')
+
+for vistoria in vistoria_divs:
+    # Captura o conteúdo da div 'caption'
+    caption_div = vistoria.find('div', class_='caption')
     
-    # verifica se a iteração é divisivel por 10
-    if j == 10:
-        #proximo
-        pyautogui.click(1845, 972)
-        time.sleep(2)
-        x1, y1 = 36, 655
-        j=0
-        
-        if i > 9000:
-            break
-        
-    # CLICA NO VER
-    pyautogui.click(x1, y1)
+    # Inicializa as variáveis
+    numero, data_hora, nome, telefone = None, None, None, None
 
-    time.sleep(2)
+    if caption_div:
+        caption_text = caption_div.text.strip()
+        partes = caption_text.split('#')
+        if len(partes) >= 5:
+            numero = partes[1].strip()
+            data_hora = partes[2].strip()
+            nome = partes[3].strip()
+            telefone = partes[4].strip()
+
+    # Captura o status
+    status_span = vistoria.find('span', class_='label')
+    status = status_span.text.strip() if status_span else "Status não encontrado"
+
+    # Captura os atributos 'alt' e os links das imagens
+    imagens = []
+    imagens_div = vistoria.find_all('div', class_='dz-image')
     
-    # Espera até que o modal esteja visível
-    modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
-    driver.implicitly_wait(10)  # Espera implícita para o modal
+    for imagem_div in imagens_div:
+        img_tag = imagem_div.find('img')
+        if img_tag:
+            alt_text = img_tag.get('alt', 'Sem descrição')
+            src_link = img_tag.get('src', '')
+            imagens.append({'alt': alt_text, 'src': src_link})
 
-    # Extrai o HTML da página
-    html = driver.page_source
+    # Adiciona as informações capturadas à lista
+    vistorias.append({
+        'numero': numero,
+        'data_hora': data_hora,
+        'nome': nome,
+        'telefone': telefone,
+        'status': status,
+        'imagens': imagens
+    })
 
-    # Analisa o HTML com BeautifulSoup
-    soup = BeautifulSoup(html, 'html.parser')
-
-    status = None
-
-
-
-    # Tenta encontrar o elemento com a classe 'label label-success'
-    status_element = soup.find('div', class_='label label-success')
-
-    # Se não encontrar, tenta encontrar o elemento com a classe 'label label-danger'
-    if not status_element:
-        status_element = soup.find('div', class_='label label-danger')
-
-    # Define o valor de 'status' com base no elemento encontrado
-    if status_element:
-        status = status_element.text.strip()
-    else:
-        status = 'Status não encontrado'
-
-    # Captura os dados de inclusão e exclusão do contrato
-    sub_status_elements = soup.find('div', class_='sub_status').find_all('span')
-    if len(sub_status_elements) >= 1:
-        inclusao = sub_status_elements[0].next_sibling.strip()
-        if len(sub_status_elements) > 1:
-            exclusao = sub_status_elements[1].next_sibling.strip()
-            
-    # Encontrar todas as tags <span> com a classe 'label label-grey'
-    valor_cota_element = soup.find_all('span', class_='label label-grey')
-
-    # Pegando o texto da primeira ocorrência
-    if valor_cota_element:
-        valor_cota = valor_cota_element[0].get_text(strip=True)
-
-    # Encontrar todos os elementos com a classe 'twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button'
-    elementos = soup.find_all('div', class_=['twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button', 'twelve columns well branco'])
-    
-    integrante = None
-    # tipo = None
-    # especie = None
-    composicao = None
-    cod_fipe = None
-    valor_principal = None
-    agregado = None
-    indice_participacao = None
-    estado_grupo = 'Grande Oeste'
-
-    for elemento in elementos:
-        texto = elemento.text.strip()
-        if texto.startswith("Integrante:"):
-            integrante = texto.replace("Integrante:", "").strip()
-        # elif texto.startswith("Tipo:"):
-        #     tipo = texto.replace("Tipo:", "").strip()
-        # elif texto.startswith("Espécie:"):
-        #     especie = texto.replace("Espécie:", "").strip()
-        elif texto.startswith("Composição:"):
-            composicao = texto.replace("Composição:", "").strip()
-        elif texto.startswith("Cod. Fipe:"):
-            cod_fipe = texto.replace("Cod. Fipe:", "").strip()
-        elif texto.startswith("Valor Principal:"):
-            valor_principal = texto.replace("Valor Principal:", "").strip()
-        elif texto.startswith("Agregado:"):
-            agregado = texto.replace("Agregado:", "").strip()
-        elif texto.startswith("Índice de Participação:"):
-            indice_participacao = texto.replace("Índice de Participação:", "").strip()
-
-    # Inicializa dicionário para armazenar os valores
-    dados_veiculo = {
-        "marca": [],
-        "modelo": [],
-        "placa": [],
-        "ano fabricação": [],
-        "ano modelo": [],
-        "renavam": [],
-        "chassi": [],
-        "cor": [],
-        "estado": [],
-        "cidade": [],
-        "proprietário": [],
-        "documento": [],
-        "espécie": [],
-        "tipo": [],
-        "carroceria": [],
-        "Cap. Max. Carga": [],
-        "Peso Bruto Total": [],
-        "Cap. Max. Tração": [],
-        "N°. Motor": [],
-        "potência": [],
-        "lotação": [],
-        "eixos": [],
-        "Nº. CRV": [],
-        "Nº. Seg. CLA": [],
-        "Observações": [],
-        "rastreadores": [],
-        "bloqueadores": [],
-        "Última Vistoria": [],
-        "monitoramento": [],
-        "Anotações de Controle:": []
-    }
-
-
-    # Percorre todos os elementos para capturar as informações
-    for elemento in elementos:
-        texto = elemento.text.strip()
-        if texto.startswith("Cap. Max. Carga:"):
-            cap_max_carga = texto.replace("Cap. Max. Carga:", "").strip()
-            dados_veiculo["Cap. Max. Carga"].append(cap_max_carga)
-        elif texto.startswith("Peso Bruto Total:"):
-            peso_bruto_total = texto.replace("Peso Bruto Total:", "").strip()
-            dados_veiculo["Peso Bruto Total"].append(peso_bruto_total)
-        elif texto.startswith("Cap. Max. Tração:"):
-            cap_max_tracao = texto.replace("Cap. Max. Tração:", "").strip()
-            dados_veiculo["Cap. Max. Tração"].append(cap_max_tracao)
-        elif texto.startswith("N°. Motor:"):
-            numero_motor = texto.replace("N°. Motor:", "").strip()
-            dados_veiculo["N°. Motor"].append(numero_motor)
-        elif texto.startswith("Nº. CRV:"):
-            numero_crv = texto.replace("Nº. CRV:", "").strip()
-            dados_veiculo["Nº. CRV"].append(numero_crv)
-        elif texto.startswith("Nº. Seg. CLA:"):
-            numero_seg_cla = texto.replace("Nº. Seg. CLA:", "").strip()
-            dados_veiculo["Nº. Seg. CLA"].append(numero_seg_cla)
-        elif texto.startswith("Observações:"):
-            observacoes = texto.replace("Observações:", "").strip()
-            dados_veiculo["Observações"].append(observacoes)
-        elif texto.startswith("Rastreadores:"):
-            rastreadores = texto.replace("Rastreadores:", "").strip()
-            span_tag = elemento.find('span')
-            if span_tag:
-                rastreadores += " " + span_tag.get_text(strip=True)
-            dados_veiculo["rastreadores"].append(rastreadores)
-        elif texto.startswith("Bloqueadores:"):
-            bloqueadores = texto.replace("Bloqueadores:", "").strip()
-            span_tag = elemento.find('span')
-            if span_tag:
-                bloqueadores += " " + span_tag.get_text(strip=True)
-            dados_veiculo["bloqueadores"].append(bloqueadores)
-        elif texto.startswith("Última Vistoria:"):
-            ultima_vistoria = texto.replace("Última Vistoria:", "").strip()
-            dados_veiculo["Última Vistoria"].append(ultima_vistoria)
-        elif texto.startswith("Monitoramento:"):
-            monitoramento = texto.replace("Monitoramento:", "").strip()
-            span_tag = elemento.find('span')
-            if span_tag:
-                monitoramento = span_tag.get_text(strip=True)
-            dados_veiculo["monitoramento"].append(monitoramento)
-        elif texto.startswith("Anotações de Controle:"):
-            anotacoes_controle = elemento.find('div', class_='well').text.strip()
-            dados_veiculo["Anotações de Controle:"].append(anotacoes_controle)
-        else:
-            label_tag = elemento.find('b')
-            if label_tag:
-                label = label_tag.get_text(strip=True).replace(":", "")
-                valor = label_tag.next_sibling.strip() if label_tag.next_sibling else ""
-                if label.lower() in dados_veiculo:
-                    dados_veiculo[label.lower()].append(valor)
-            
-            
-    # Criar sessão
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    
-    # Verificar se a placa1 já está cadastrada no grupo com o mesmo status
-    placa1_existe = session.query(Veiculos).filter_by(placa1=dados_veiculo["placa"][0], estado_grupo=estado_grupo, status=status).first()
-    if placa1_existe:
-        print(f"Placa {dados_veiculo['placa'][0]} já está cadastrada no grupo {estado_grupo} com o status {status}.")
-        # FECHA
-        pyautogui.click(1784, 478)
-        time.sleep(1)
-        j += 1
-        y1 = y1 + 31
-        continue
-    
-    
-    # Cria uma instância da classe Veiculos
-    veiculo = Veiculos(
-        status=empty_to_none(status),
-        placa1=empty_to_none(dados_veiculo["placa"][0] if len(dados_veiculo["placa"]) > 0 else None),
-    )
-
-    # Adiciona a instância à sessão e tenta salvar no banco de dados
-    try:
-        session.add(veiculo)
-        session.commit()
-    except IntegrityError as e:
-        if 'uq_placa1_estado_grupo_status' in str(e):
-            print(f"Placa {dados_veiculo['placa'][0]} já está cadastrada no grupo {estado_grupo} com o status {status}.")
-        else:
-            print(f"Erro ao inserir o veículo: {e}")
-        session.rollback()
-
-    time.sleep(1)
-    
-    print(f"Veículo {dados_veiculo['placa'][0]} inserido com sucesso.")
-    
-    # FECHA
-    pyautogui.click(1784, 478)
-    
-    time.sleep(1)
-    
-    j += 1
-    i += 1
-    y1 = y1 + 31
-
+# Exibe as informações capturadas
+for vistoria in vistorias:
+    print(f"Número: {vistoria['numero']}")
+    print(f"Data e Hora: {vistoria['data_hora']}")
+    print(f"Nome: {vistoria['nome']}")
+    print(f"Telefone: {vistoria['telefone']}")
+    print(f"Status: {vistoria['status']}")
+    print("Imagens:")
+    for img in vistoria['imagens']:
+        print(f"  - {img['alt']} ({img['src']})")
+    print("-" * 50)
