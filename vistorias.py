@@ -1,3 +1,4 @@
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
@@ -6,12 +7,14 @@ from sqlalchemy.orm import sessionmaker, session
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
 from sql import engine, Veiculos
+from urllib.parse import urljoin
 from dotenv import load_dotenv
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import pyautogui
 import time
 import os
+
 
 
 # Obter as credenciais a partir das variáveis de ambiente
@@ -64,61 +67,125 @@ html = driver.page_source
 # Analisa o HTML com BeautifulSoup
 soup = BeautifulSoup(html, 'html.parser')
 
-# Lista para armazenar as informações de todas as vistorias
-vistorias = []
+# Inicializa a variável 'placa' como None
+placa = None
+
+# Procura por elementos que contenham a placa
+placa_element = soup.find('div', class_='four columns fv input-button')  # Ajuste o seletor conforme necessário
+
+# Verifica se encontrou o elemento da placa
+if placa_element:
+    placa = placa_element.text.strip()  # Extrai o texto da placa e remove espaços extras
+
+print(f"Placa encontrada: {placa}" if placa else "Nenhuma placa encontrada.")
 
 # Encontra todas as divs com a classe 'subport default listar_anexos'
 vistoria_divs = soup.find_all('div', class_='subport default listar_anexos')
 
-for vistoria in vistoria_divs:
-    # Captura o conteúdo da div 'caption'
-    caption_div = vistoria.find('div', class_='caption')
+numero_vistorias = len(vistoria_divs)
+print(f"Total de vistorias encontradas: {numero_vistorias}")
+
+# URL base do site para transformar os links relativos em absolutos
+base_url = "https://www.hitex.com.br"
+
+# Aguarda e clica em todos os botões de expandir
+wait = WebDriverWait(driver, 10)
+expand_buttons = driver.find_elements(By.CSS_SELECTOR, 'i.icon.expand.icon-chevron-down')
+
+# Se houver pelo menos um botão de expandir, clique no primeiro
+if expand_buttons:
+    try:
+        # Pega o primeiro botão de expansão
+        button = expand_buttons[1]
+        
+        # Scroll até o botão para garantir que ele esteja visível
+        ActionChains(driver).move_to_element(button).perform()
+        
+        # Clica no primeiro botão
+        button.click()
+        time.sleep(2)  # Pequena pausa para permitir o carregamento das imagens
+        
+        # Agora localiza os links "VER"
+        links = driver.find_elements(By.CSS_SELECTOR, 'a.abrir_anexo')
+        for link in links:
+            print("Link encontrado:", link.get_attribute('href'))
+        
+                # Localiza o botão de "fechar" (pode ser o mesmo botão com estado alterado)
+        close_button = driver.find_element(By.CSS_SELECTOR, 'i.icon.collapse.icon-chevron-up')
+            
+        # Scroll até o botão para garantir que ele esteja visível
+        ActionChains(driver).move_to_element(close_button).perform()
+        
+        # Clica no botão para fechar
+        close_button.click()
+        print("Botão fechado com sucesso.")
+            
+    except Exception as e:
+        print(f"Erro ao clicar no botão: {e}")
+
+
+
+# for vistoria in vistoria_divs:
+#     # Captura o conteúdo da div 'caption'
+#     caption_div = vistoria.find('div', class_='caption')
     
-    # Inicializa as variáveis
-    numero, data_hora, nome, telefone = None, None, None, None
+#     # Inicializa as variáveis
+#     numero, data_hora, nome, telefone = None, None, None, None
 
-    if caption_div:
-        caption_text = caption_div.text.strip()
-        partes = caption_text.split('#')
-        if len(partes) >= 5:
-            numero = partes[1].strip()
-            data_hora = partes[2].strip()
-            nome = partes[3].strip()
-            telefone = partes[4].strip()
+#     if caption_div:
+#         caption_text = caption_div.text.strip()
+#         partes = caption_text.split('#')
+#         if len(partes) >= 5:
+#             numero = partes[1].strip()
+#             data_hora = partes[2].strip()
+#             nome = partes[3].strip()
+#             telefone = partes[4].strip()
 
-    # Captura o status
-    status_span = vistoria.find('span', class_='label')
-    status = status_span.text.strip() if status_span else "Status não encontrado"
+#     # Captura o status
+#     status_span = vistoria.find('span', class_='label')
+#     status = status_span.text.strip() if status_span else "Status não encontrado"
 
-    # Captura os atributos 'alt' e os links das imagens
-    imagens = []
-    imagens_div = vistoria.find_all('div', class_='dz-image')
-    
-    for imagem_div in imagens_div:
-        img_tag = imagem_div.find('img')
-        if img_tag:
-            alt_text = img_tag.get('alt', 'Sem descrição')
-            src_link = img_tag.get('src', '')
-            imagens.append({'alt': alt_text, 'src': src_link})
+#     # Captura os atributos 'alt' e os links das imagens
+#     imagens = []
 
-    # Adiciona as informações capturadas à lista
-    vistorias.append({
-        'numero': numero,
-        'data_hora': data_hora,
-        'nome': nome,
-        'telefone': telefone,
-        'status': status,
-        'imagens': imagens
-    })
+#     # ➜ Captura imagens dentro de 'dz-image'
+#     imagens_div = vistoria.find_all('div', class_='dz-image')
+#     for imagem_div in imagens_div:
+#         img_tag = imagem_div.find('img')
+#         if img_tag:
+#             alt_text = img_tag.get('alt', 'Sem descrição')
+#             src_link = img_tag.get('src', '')
+#             full_src = urljoin(base_url, src_link) if src_link else ''
+#             imagens.append({'alt': alt_text, 'src': full_src})
 
-# Exibe as informações capturadas
-for vistoria in vistorias:
-    print(f"Número: {vistoria['numero']}")
-    print(f"Data e Hora: {vistoria['data_hora']}")
-    print(f"Nome: {vistoria['nome']}")
-    print(f"Telefone: {vistoria['telefone']}")
-    print(f"Status: {vistoria['status']}")
-    print("Imagens:")
-    for img in vistoria['imagens']:
-        print(f"  - {img['alt']} ({img['src']})")
-    print("-" * 50)
+#     # ➜ Captura os links dentro de 'dz-details'
+#     detalhes_div = vistoria.find_all('div', class_='dz-details')
+#     for detalhe in detalhes_div:
+#         links = detalhe.find_all('a')
+#         for link in links:
+#             href = link.get("href")
+#             if href:
+#                 full_url = urljoin(base_url, href)
+#                 imagens.append({'alt': link.text.strip(), 'src': full_url})
+
+#     # Adiciona as informações capturadas à lista
+#     vistorias.append({
+#         'numero': numero,
+#         'data_hora': data_hora,
+#         'nome': nome,
+#         'telefone': telefone,
+#         'status': status,
+#         'imagens': imagens
+#     })
+
+# # Exibe as informações capturadas
+# for vistoria in vistorias:
+#     print(f"Número: {vistoria['numero']}")
+#     print(f"Data e Hora: {vistoria['data_hora']}")
+#     print(f"Nome: {vistoria['nome']}")
+#     print(f"Telefone: {vistoria['telefone']}")
+#     print(f"Status: {vistoria['status']}")
+#     print("Imagens:")
+#     for img in vistoria['imagens']:
+#         print(f"  - {img['alt']} ({img['src']})")
+#     print("-" * 50)
