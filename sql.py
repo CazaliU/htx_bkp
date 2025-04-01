@@ -173,12 +173,12 @@ class VistoriaImagens(Base):
 
     vi_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada registro
     vi_veiculo_id = Column(Integer, ForeignKey('veiculos.ve_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para a tabela 'veiculos'
-    identificador = Column(String(50), nullable=False)  # Número da vistoria
-    data_hora = Column(String, nullable=True)  # Data e hora da vistoria
-    nome = Column(String(255), nullable=True)  # Nome associado à vistoria
-    telefone = Column(String(20), nullable=True)  # Telefone associado à vistoria
+    vi_identificador = Column(String(50), nullable=False)  # Número da vistoria
+    vi_status = Column(String(20), nullable=False) #
+    vi_data_hora = Column(String, nullable=True)  # Data e hora da vistoria
+    vi_nome = Column(String(255), nullable=True)  # Nome associado à vistoria
+    vi_telefone = Column(String(20), nullable=True)  # Telefone associado à vistoria
     vi_caminho = Column(String, nullable=False)  # Caminhos das imagens (armazenados como JSON ou string delimitada)
-    vi_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
 
 
 # Criar as tabelas no banco de dados

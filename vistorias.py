@@ -93,6 +93,100 @@ if placa_element:
             if veiculo:
                 print(f"Placa encontrada no banco de dados! ID do veículo: {veiculo.ve_id}")
                 veiculo_id = veiculo.ve_id  # Armazena o ID do veículo
+                
+                # Encontra todas as divs com a classe 'subport default listar_anexos'
+                vistoria_divs = soup.find_all('div', class_='subport default listar_anexos')
+
+                # URL base do site para transformar os links relativos em absolutos
+                base_url = "https://www.hitex.com.br"
+
+                # Localiza o contêiner com a classe "tab vistorias"
+                tab_vistorias = driver.find_element(By.CSS_SELECTOR, 'div.tab.vistorias')
+
+                # Encontra todos os botões de expansão dentro do contêiner "tab vistorias"
+                expand_buttons = tab_vistorias.find_elements(By.CSS_SELECTOR, 'i.icon.expand.icon-chevron-down')
+
+                # Número total de vistorias baseado nos botões encontrados dentro de "tab vistorias"
+                numero_vistorias = len(expand_buttons)
+                print(f"Total de vistorias encontradas: {numero_vistorias}")
+
+                vistorias = []
+                
+                # Itera sobre o número de vistorias, começando em 1 e indo até o número total
+                for index in range(1, numero_vistorias + 1):  # Começa em 1 e vai até numero_vistorias
+                    try:
+                        # Localiza os botões de expansão novamente dentro de "tab vistorias"
+                        expand_buttons = tab_vistorias.find_elements(By.CSS_SELECTOR, 'i.icon.expand.icon-chevron-down')
+                        button = expand_buttons[index - 1]  # Ajusta o índice para acessar o botão correto
+                        
+                        print(f"Abrindo botão de expansão {index}/{numero_vistorias}")
+                        
+                        # Scroll até o botão para garantir que ele esteja visível
+                        ActionChains(driver).move_to_element(button).perform()
+                        
+                        # Clica no botão para expandir
+                        button.click()
+                        time.sleep(2)  # Pequena pausa para permitir o carregamento das imagens
+                        
+                        # Captura o contêiner da vistoria expandida
+                        vistoria_container = tab_vistorias.find_elements(By.CSS_SELECTOR, 'div.subport.default.listar_anexos')[index - 1]
+                        
+                        # Captura o conteúdo da div 'caption' dentro do contêiner da vistoria
+                        caption_div = vistoria_container.find_element(By.CSS_SELECTOR, 'div.caption')
+                        numero, data_hora, nome, telefone, status = None, None, None, None, None
+
+                        if caption_div:
+                            caption_text = caption_div.text.strip()
+                            partes = caption_text.split('#')
+                            if len(partes) >= 5:
+                                numero = partes[1].strip()
+                                data_hora = partes[2].strip()
+                                nome = partes[3].strip()
+                                telefone = partes[4].strip()
+
+                        # Captura o status da vistoria
+                        try:
+                            status_span = vistoria_container.find_element(By.CSS_SELECTOR, 'span.label')
+                            status = status_span.text.strip()  # Extrai o texto do status
+                        except Exception as e:
+                            print(f"Erro ao capturar o status da vistoria {numero}: {e}")
+
+                        print(f"Vistoria número: {numero}, Data/Hora: {data_hora}, Nome: {nome}, Telefone: {telefone}, Status: {status}")
+
+                        # Captura os links das imagens dentro do contêiner da vistoria expandida
+                        links = vistoria_container.find_elements(By.CSS_SELECTOR, 'a.abrir_anexo')
+                        imagens = [link.get_attribute('href') for link in links]
+                        for link in imagens:
+                            print("Link encontrado:", link)
+
+                        # Adiciona as informações da vistoria ao array
+                        vistorias.append({
+                            'numero': numero,
+                            'data_hora': data_hora,
+                            'nome': nome,
+                            'telefone': telefone,
+                            'status': status,
+                            'imagens': imagens
+                        })
+                        
+                        # Localiza o botão de "fechar" (pode ser o mesmo botão com estado alterado)
+                        close_button = vistoria_container.find_element(By.CSS_SELECTOR, 'i.icon.collapse.icon-chevron-up')
+                        
+                        print(f"Fechando botão de expansão {index}/{numero_vistorias}")
+                        
+                        # Scroll até o botão para garantir que ele esteja visível
+                        ActionChains(driver).move_to_element(close_button).perform()
+                        
+                        # Clica no botão para fechar
+                        close_button.click()
+                        time.sleep(1)  # Pequena pausa para garantir que o fechamento seja processado
+                        
+                    except Exception as e:
+                        print(f"Erro ao processar a vistoria {index}: {e}")
+                
+                    
+                    
+                    
             else:
                 print("Placa não encontrada no banco de dados.")
                 # colocar para sair do loop
@@ -104,98 +198,3 @@ if placa_element:
     else:
         print("Nenhuma placa foi encontrada no web scraping.")
         #conitnuar
-
-
-
-# Encontra todas as divs com a classe 'subport default listar_anexos'
-vistoria_divs = soup.find_all('div', class_='subport default listar_anexos')
-
-# URL base do site para transformar os links relativos em absolutos
-base_url = "https://www.hitex.com.br"
-
-# Localiza o contêiner com a classe "tab vistorias"
-tab_vistorias = driver.find_element(By.CSS_SELECTOR, 'div.tab.vistorias')
-
-# Encontra todos os botões de expansão dentro do contêiner "tab vistorias"
-expand_buttons = tab_vistorias.find_elements(By.CSS_SELECTOR, 'i.icon.expand.icon-chevron-down')
-
-# Número total de vistorias baseado nos botões encontrados dentro de "tab vistorias"
-numero_vistorias = len(expand_buttons)
-print(f"Total de vistorias encontradas: {numero_vistorias}")
-
-vistorias = []
-
-# Itera sobre o número de vistorias, começando em 1 e indo até o número total
-for index in range(1, numero_vistorias + 1):  # Começa em 1 e vai até numero_vistorias
-    try:
-        # Localiza os botões de expansão novamente dentro de "tab vistorias"
-        expand_buttons = tab_vistorias.find_elements(By.CSS_SELECTOR, 'i.icon.expand.icon-chevron-down')
-        button = expand_buttons[index - 1]  # Ajusta o índice para acessar o botão correto
-        
-        print(f"Abrindo botão de expansão {index}/{numero_vistorias}")
-        
-        # Scroll até o botão para garantir que ele esteja visível
-        ActionChains(driver).move_to_element(button).perform()
-        
-        # Clica no botão para expandir
-        button.click()
-        time.sleep(2)  # Pequena pausa para permitir o carregamento das imagens
-        
-        # Captura o contêiner da vistoria expandida
-        vistoria_container = tab_vistorias.find_elements(By.CSS_SELECTOR, 'div.subport.default.listar_anexos')[index - 1]
-        
-        # Captura o conteúdo da div 'caption' dentro do contêiner da vistoria
-        caption_div = vistoria_container.find_element(By.CSS_SELECTOR, 'div.caption')
-        numero, data_hora, nome, telefone = None, None, None, None
-
-        if caption_div:
-            caption_text = caption_div.text.strip()
-            partes = caption_text.split('#')
-            if len(partes) >= 5:
-                numero = partes[1].strip()
-                data_hora = partes[2].strip()
-                nome = partes[3].strip()
-                telefone = partes[4].strip()
-        
-        print(f"Vistoria número: {numero}, Data/Hora: {data_hora}, Nome: {nome}, Telefone: {telefone}")
-        
-        # Captura os links das imagens dentro do contêiner da vistoria expandida
-        links = vistoria_container.find_elements(By.CSS_SELECTOR, 'a.abrir_anexo')
-        imagens = [link.get_attribute('href') for link in links]
-        for link in imagens:
-            print("Link encontrado:", link)
-        
-        # Adiciona as informações da vistoria ao array
-        vistorias.append({
-            'numero': numero,
-            'data_hora': data_hora,
-            'nome': nome,
-            'telefone': telefone,
-            'imagens': imagens
-        })
-        
-        # Localiza o botão de "fechar" (pode ser o mesmo botão com estado alterado)
-        close_button = vistoria_container.find_element(By.CSS_SELECTOR, 'i.icon.collapse.icon-chevron-up')
-        
-        print(f"Fechando botão de expansão {index}/{numero_vistorias}")
-        
-        # Scroll até o botão para garantir que ele esteja visível
-        ActionChains(driver).move_to_element(close_button).perform()
-        
-        # Clica no botão para fechar
-        close_button.click()
-        time.sleep(1)  # Pequena pausa para garantir que o fechamento seja processado
-        
-    except Exception as e:
-        print(f"Erro ao processar a vistoria {index}: {e}")
-
-# Exibe as informações armazenadas no array
-for vistoria in vistorias:
-    print(f"Número: {vistoria['numero']}")
-    print(f"Data e Hora: {vistoria['data_hora']}")
-    print(f"Nome: {vistoria['nome']}")
-    print(f"Telefone: {vistoria['telefone']}")
-    print("Imagens:")
-    for img in vistoria['imagens']:
-        print(f"  - {img}")
-    print("-" * 50)
