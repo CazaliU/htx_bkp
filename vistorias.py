@@ -69,15 +69,43 @@ soup = BeautifulSoup(html, 'html.parser')
 
 # Inicializa a variável 'placa' como None
 placa = None
+veiculo_id = None
 
 # Procura por elementos que contenham a placa
 placa_element = soup.find('div', class_='four columns fv input-button')  # Ajuste o seletor conforme necessário
 
 # Verifica se encontrou o elemento da placa
 if placa_element:
-    placa = placa_element.text.strip()  # Extrai o texto da placa e remove espaços extras
+    placa_text = placa_element.text.strip()  # Extrai o texto e remove espaços extras
+    if "Placa:" in placa_text:
+        placa = placa_text.replace("Placa:", "").strip()  # Remove o prefixo "Placa:" e espaços extras
+        
+        # Cria uma sessão para interagir com o banco de dados
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        
+        try:
+            # Consulta a tabela 'veiculos' para verificar se a placa existe
+            veiculo = session.query(Veiculos).filter(
+                Veiculos.ve_placa1.ilike(placa) # Verifica na coluna ve_placa1
+            ).first()
 
-print(f"Placa encontrada: {placa}" if placa else "Nenhuma placa encontrada.")
+            if veiculo:
+                print(f"Placa encontrada no banco de dados! ID do veículo: {veiculo.ve_id}")
+                veiculo_id = veiculo.ve_id  # Armazena o ID do veículo
+            else:
+                print("Placa não encontrada no banco de dados.")
+                # colocar para sair do loop
+        except Exception as e:
+            print(f"Erro ao consultar o banco de dados: {e}")
+        finally:
+            # Fecha a sessão
+            session.close()
+    else:
+        print("Nenhuma placa foi encontrada no web scraping.")
+        #conitnuar
+
+
 
 # Encontra todas as divs com a classe 'subport default listar_anexos'
 vistoria_divs = soup.find_all('div', class_='subport default listar_anexos')
@@ -94,6 +122,8 @@ expand_buttons = tab_vistorias.find_elements(By.CSS_SELECTOR, 'i.icon.expand.ico
 # Número total de vistorias baseado nos botões encontrados dentro de "tab vistorias"
 numero_vistorias = len(expand_buttons)
 print(f"Total de vistorias encontradas: {numero_vistorias}")
+
+vistorias = []
 
 # Itera sobre o número de vistorias, começando em 1 e indo até o número total
 for index in range(1, numero_vistorias + 1):  # Começa em 1 e vai até numero_vistorias
@@ -131,8 +161,18 @@ for index in range(1, numero_vistorias + 1):  # Começa em 1 e vai até numero_v
         
         # Captura os links das imagens dentro do contêiner da vistoria expandida
         links = vistoria_container.find_elements(By.CSS_SELECTOR, 'a.abrir_anexo')
-        for link in links:
-            print("Link encontrado:", link.get_attribute('href'))
+        imagens = [link.get_attribute('href') for link in links]
+        for link in imagens:
+            print("Link encontrado:", link)
+        
+        # Adiciona as informações da vistoria ao array
+        vistorias.append({
+            'numero': numero,
+            'data_hora': data_hora,
+            'nome': nome,
+            'telefone': telefone,
+            'imagens': imagens
+        })
         
         # Localiza o botão de "fechar" (pode ser o mesmo botão com estado alterado)
         close_button = vistoria_container.find_element(By.CSS_SELECTOR, 'i.icon.collapse.icon-chevron-up')
@@ -149,69 +189,13 @@ for index in range(1, numero_vistorias + 1):  # Começa em 1 e vai até numero_v
     except Exception as e:
         print(f"Erro ao processar a vistoria {index}: {e}")
 
-
-
-# for vistoria in vistoria_divs:
-#     # Captura o conteúdo da div 'caption'
-#     caption_div = vistoria.find('div', class_='caption')
-    
-#     # Inicializa as variáveis
-#     numero, data_hora, nome, telefone = None, None, None, None
-
-#     if caption_div:
-#         caption_text = caption_div.text.strip()
-#         partes = caption_text.split('#')
-#         if len(partes) >= 5:
-#             numero = partes[1].strip()
-#             data_hora = partes[2].strip()
-#             nome = partes[3].strip()
-#             telefone = partes[4].strip()
-
-#     # Captura o status
-#     status_span = vistoria.find('span', class_='label')
-#     status = status_span.text.strip() if status_span else "Status não encontrado"
-
-#     # Captura os atributos 'alt' e os links das imagens
-#     imagens = []
-
-#     # ➜ Captura imagens dentro de 'dz-image'
-#     imagens_div = vistoria.find_all('div', class_='dz-image')
-#     for imagem_div in imagens_div:
-#         img_tag = imagem_div.find('img')
-#         if img_tag:
-#             alt_text = img_tag.get('alt', 'Sem descrição')
-#             src_link = img_tag.get('src', '')
-#             full_src = urljoin(base_url, src_link) if src_link else ''
-#             imagens.append({'alt': alt_text, 'src': full_src})
-
-#     # ➜ Captura os links dentro de 'dz-details'
-#     detalhes_div = vistoria.find_all('div', class_='dz-details')
-#     for detalhe in detalhes_div:
-#         links = detalhe.find_all('a')
-#         for link in links:
-#             href = link.get("href")
-#             if href:
-#                 full_url = urljoin(base_url, href)
-#                 imagens.append({'alt': link.text.strip(), 'src': full_url})
-
-#     # Adiciona as informações capturadas à lista
-#     vistorias.append({
-#         'numero': numero,
-#         'data_hora': data_hora,
-#         'nome': nome,
-#         'telefone': telefone,
-#         'status': status,
-#         'imagens': imagens
-#     })
-
-# # Exibe as informações capturadas
-# for vistoria in vistorias:
-#     print(f"Número: {vistoria['numero']}")
-#     print(f"Data e Hora: {vistoria['data_hora']}")
-#     print(f"Nome: {vistoria['nome']}")
-#     print(f"Telefone: {vistoria['telefone']}")
-#     print(f"Status: {vistoria['status']}")
-#     print("Imagens:")
-#     for img in vistoria['imagens']:
-#         print(f"  - {img['alt']} ({img['src']})")
-#     print("-" * 50)
+# Exibe as informações armazenadas no array
+for vistoria in vistorias:
+    print(f"Número: {vistoria['numero']}")
+    print(f"Data e Hora: {vistoria['data_hora']}")
+    print(f"Nome: {vistoria['nome']}")
+    print(f"Telefone: {vistoria['telefone']}")
+    print("Imagens:")
+    for img in vistoria['imagens']:
+        print(f"  - {img}")
+    print("-" * 50)
