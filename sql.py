@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, String, Integer, ForeignKey
+from sqlalchemy import create_engine, Column, String, Integer, ForeignKey, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import UniqueConstraint
 from dotenv import load_dotenv
@@ -175,10 +175,10 @@ class VistoriaImagens(Base):
     vi_veiculo_id = Column(Integer, ForeignKey('veiculos.ve_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para a tabela 'veiculos'
     vi_identificador = Column(String(50), nullable=False)  # Número da vistoria
     vi_status = Column(String(20), nullable=False) #
-    vi_data_hora = Column(String, nullable=True)  # Data e hora da vistoria
+    vi_data_hora = Column(String, nullable=True)  # Alterado para DateTime
     vi_nome = Column(String(255), nullable=True)  # Nome associado à vistoria
     vi_telefone = Column(String(20), nullable=True)  # Telefone associado à vistoria
-    vi_caminho = Column(String, nullable=False)  # Caminhos das imagens (armazenados como JSON ou string delimitada)
+    vi_caminho = Column(JSON, nullable=False)  # Caminhos das imagens (armazenados como JSON ou string delimitada)
 
 
 # Criar as tabelas no banco de dados

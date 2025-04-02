@@ -6,13 +6,17 @@ from selenium.webdriver.chrome.service import Service
 from sqlalchemy.orm import sessionmaker, session
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
-from sql import engine, Veiculos
+from sql import engine, Veiculos, VistoriaImagens
 from urllib.parse import urljoin
 from dotenv import load_dotenv
 from selenium import webdriver
+from datetime import datetime
 from bs4 import BeautifulSoup
 import pyautogui
+import paramiko
+import requests
 import time
+import json
 import os
 
 
@@ -20,6 +24,12 @@ import os
 # Obter as credenciais a partir das variáveis de ambiente
 username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
+
+host_ssh = "138.59.52.178"
+port_ssh = 8423
+username_ssh = "track"
+password_ssh = "ggdc321!X@"
+remote_folder = "/var/www/imagens_vistorias/"
 
 # Configura o caminho para o ChromeDriver
 chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
@@ -73,6 +83,84 @@ veiculo_id = None
 
 # Procura por elementos que contenham a placa
 placa_element = soup.find('div', class_='four columns fv input-button')  # Ajuste o seletor conforme necessário
+
+# Função para enviar imagens diretamente para o servidor
+def upload_image_to_server(url, remote_folder, identificador):
+    try:
+        # Baixa o conteúdo da imagem
+        response = requests.get(url, stream=True)
+        if response.status_code == 200:
+            # Conecta ao servidor via SFTP
+            transport = paramiko.Transport((host_ssh, port_ssh))
+            transport.connect(username=username_ssh, password=password_ssh)
+            sftp = paramiko.SFTPClient.from_transport(transport)
+
+            # Define o nome do arquivo com o identificador
+            original_file_name = url.split('=')[-1]  # Extrai o nome original do arquivo do URL
+            file_extension = os.path.splitext(original_file_name)[-1]  # Obtém a extensão do arquivo
+            new_file_name = f"{identificador}_{original_file_name}"  # Adiciona o identificador ao nome do arquivo
+
+            # Define o caminho remoto para salvar a imagem
+            remote_path = os.path.join(remote_folder, new_file_name)  # Usa os.path.join para evitar barras duplicadas
+
+            with sftp.file(remote_path, 'wb') as remote_file:
+                for chunk in response.iter_content(1024):
+                    remote_file.write(chunk)
+
+            print(f"Imagem enviada para o servidor: {remote_path}")
+            sftp.close()
+            transport.close()
+            return remote_path
+        else:
+            print(f"Erro ao baixar a imagem: {url}")
+            return None
+    except Exception as e:
+        print(f"Erro ao enviar a imagem para o servidor: {e}")
+        return None
+
+# Função para salvar os caminhos no banco de dados
+def save_to_database(session, veiculo_id, numero, status, data_hora, nome, telefone, remote_paths):
+    try:
+        print(f"Remote paths antes da conversão: {remote_paths}")
+
+        # Substitui strings vazias por None
+        numero = numero if numero.strip() else None
+        status = status if status.strip() else None
+        data_hora = data_hora if data_hora.strip() else None
+        nome = nome if nome.strip() else None
+        telefone = telefone if telefone.strip() else None
+
+        # Cria um único registro para a vistoria
+        nova_vistoria = VistoriaImagens(
+            vi_veiculo_id=int(veiculo_id),  # Certifique-se de que é um inteiro
+            vi_identificador=numero,  # Substitui string vazia por None
+            vi_status=status,  # Substitui string vazia por None
+            vi_data_hora=data_hora,  # Substitui string vazia por None
+            vi_nome=nome,  # Substitui string vazia por None
+            vi_telefone=telefone,  # Substitui string vazia por None
+            vi_caminho=remote_paths  # Passa a lista diretamente
+        )
+        session.add(nova_vistoria)
+        session.commit()
+        print("Caminhos das imagens salvos no banco de dados com sucesso!")
+    except Exception as e:
+        print(f"Erro ao salvar no banco de dados: {e}")
+        session.rollback()
+
+# Processa as imagens encontradas
+def process_images(session, veiculo_id, numero, status, data_hora, nome, telefone, image_links):
+    remote_paths = []
+
+    for link in image_links:
+        # Envia a imagem diretamente para o servidor com o identificador no nome
+        remote_path = upload_image_to_server(link, remote_folder, numero)
+        if remote_path:
+            remote_paths.append(remote_path)
+
+    # Salva os caminhos no banco de dados
+    if remote_paths:
+        save_to_database(session, veiculo_id, numero, status, data_hora, nome, telefone, remote_paths)
+
 
 # Verifica se encontrou o elemento da placa
 if placa_element:
@@ -159,15 +247,16 @@ if placa_element:
                         for link in imagens:
                             print("Link encontrado:", link)
 
-                        # Adiciona as informações da vistoria ao array
-                        vistorias.append({
-                            'numero': numero,
-                            'data_hora': data_hora,
-                            'nome': nome,
-                            'telefone': telefone,
-                            'status': status,
-                            'imagens': imagens
-                        })
+                        process_images(
+                            session=session,
+                            veiculo_id=veiculo_id,
+                            numero=numero,
+                            status=status,
+                            data_hora=data_hora,
+                            nome=nome,
+                            telefone=telefone,
+                            image_links=imagens
+                        )
                         
                         # Localiza o botão de "fechar" (pode ser o mesmo botão com estado alterado)
                         close_button = vistoria_container.find_element(By.CSS_SELECTOR, 'i.icon.collapse.icon-chevron-up')
