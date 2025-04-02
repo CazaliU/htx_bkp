@@ -15,8 +15,8 @@ from bs4 import BeautifulSoup
 import pyautogui
 import paramiko
 import requests
+import shutil
 import time
-import json
 import os
 
 
@@ -149,18 +149,54 @@ def save_to_database(session, veiculo_id, numero, status, data_hora, nome, telef
 
 # Processa as imagens encontradas
 def process_images(session, veiculo_id, numero, status, data_hora, nome, telefone, image_links):
+    local_folder = f"temp_vistoria_{numero}"  # Pasta temporária para armazenar as imagens
     remote_paths = []
 
-    for link in image_links:
-        # Envia a imagem diretamente para o servidor com o identificador no nome
-        remote_path = upload_image_to_server(link, remote_folder, numero)
-        if remote_path:
+    try:
+        # Cria a pasta temporária
+        if not os.path.exists(local_folder):
+            os.makedirs(local_folder)
+
+        # Baixa todas as imagens localmente
+        for link in image_links:
+            file_name = f"{numero}_{link.split('=')[-1]}"  # Renomeia o arquivo com o identificador
+            local_path = os.path.join(local_folder, file_name)
+
+            # Baixa a imagem
+            response = requests.get(link, stream=True)
+            if response.status_code == 200:
+                with open(local_path, 'wb') as file:
+                    for chunk in response.iter_content(1024):
+                        file.write(chunk)
+                print(f"Imagem baixada: {local_path}")
+            else:
+                print(f"Erro ao baixar a imagem: {link}")
+
+        # Envia todas as imagens para o servidor
+        transport = paramiko.Transport((host_ssh, port_ssh))
+        transport.connect(username=username_ssh, password=password_ssh)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+
+        for file_name in os.listdir(local_folder):
+            local_path = os.path.join(local_folder, file_name)
+            remote_path = os.path.join(remote_folder, file_name)
+            sftp.put(local_path, remote_path)
             remote_paths.append(remote_path)
+            print(f"Imagem enviada para o servidor: {remote_path}")
 
-    # Salva os caminhos no banco de dados
-    if remote_paths:
-        save_to_database(session, veiculo_id, numero, status, data_hora, nome, telefone, remote_paths)
+        sftp.close()
+        transport.close()
 
+        # Salva os caminhos no banco de dados
+        if remote_paths:
+            save_to_database(session, veiculo_id, numero, status, data_hora, nome, telefone, remote_paths)
+
+    except Exception as e:
+        print(f"Erro ao processar as imagens: {e}")
+    finally:
+        # Remove a pasta temporária e os arquivos locais
+        if os.path.exists(local_folder):
+            shutil.rmtree(local_folder)
 
 # Verifica se encontrou o elemento da placa
 if placa_element:
