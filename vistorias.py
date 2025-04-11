@@ -148,7 +148,7 @@ password_ssh = os.getenv('PASSWORD_SSH')
 remote_folder = "/var/www/imagens_vistorias/"
 
 # Configura o caminho para o ChromeDriver
-chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
+chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
 
 # Verifica se o arquivo chromedriver.exe existe
 if not os.path.isfile(chrome_driver_path):
@@ -202,7 +202,10 @@ for index, botao in enumerate(botoes_ver):
         # Clica no botão para abrir o modal
         botao.click()
         time.sleep(2)  # Aguarde o modal carregar
-        pyautogui.click(x=1033, y=379)  # Clica na aba vistoria
+        
+        # Localiza a aba vistorias dentro do modal
+        aba_vistorias = driver.find_element(By.CSS_SELECTOR, 'li[data-id="vistorias"]')
+        aba_vistorias.click()
         time.sleep(2)  # Aguarde o carregamento da aba
 
         # Extrai o HTML da página
