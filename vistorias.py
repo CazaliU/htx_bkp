@@ -32,12 +32,12 @@ def upload_image_to_server(url, remote_folder, identificador):
             sftp = paramiko.SFTPClient.from_transport(transport)
 
             # Define o nome do arquivo com o identificador
-            original_file_name = url.split('=')[-1]  # Extrai o nome original do arquivo do URL
-            file_extension = os.path.splitext(original_file_name)[-1]  # Obtém a extensão do arquivo
-            new_file_name = f"{identificador}_{original_file_name}"  # Adiciona o identificador ao nome do arquivo
+            original_file_name = url.split('=')[-1]  
+            file_extension = os.path.splitext(original_file_name)[-1] 
+            new_file_name = f"{identificador}_{original_file_name}"  
 
             # Define o caminho remoto para salvar a imagem
-            remote_path = os.path.join(remote_folder, new_file_name)  # Usa os.path.join para evitar barras duplicadas
+            remote_path = os.path.join(remote_folder, new_file_name)
 
             with sftp.file(remote_path, 'wb') as remote_file:
                 for chunk in response.iter_content(1024):
@@ -132,7 +132,12 @@ def process_images(session, veiculo_id, numero, status, data_hora, nome, telefon
     finally:
         # Remove a pasta temporária e os arquivos locais
         if os.path.exists(local_folder):
-            shutil.rmtree(local_folder)
+            try:
+                print(f"Removendo a pasta temporária: {local_folder}")
+                shutil.rmtree(local_folder)
+                print("Pasta temporária removida com sucesso.")
+            except Exception as e:
+                print(f"Erro ao remover a pasta temporária: {e}")
 
 
 
@@ -163,6 +168,7 @@ driver = webdriver.Chrome(service=Service(chrome_driver_path), options=options)
 driver.get('https://www.hitex.com.br/')  # Substitua pela URL real do login
 
 # Espera explícita para garantir que o elemento esteja presente
+time.sleep(3)  # Aguarde o carregamento da página
 wait = WebDriverWait(driver, 10)
 username_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Usuário"]')
 password_input = driver.find_element(By.CSS_SELECTOR, 'input[placeholder="Senha"]')
