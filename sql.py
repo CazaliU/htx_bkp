@@ -170,7 +170,7 @@ class Veiculos(Base):
 
 class VistoriaImagens(Base):
     __tablename__ = 'vistoria_imagens'
-
+    # add lat/long
     vi_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada registro
     vi_veiculo_id = Column(Integer, ForeignKey('veiculos.ve_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para a tabela 'veiculos'
     vi_identificador = Column(String(50), nullable=False)  # Número da vistoria
@@ -183,3 +183,4 @@ class VistoriaImagens(Base):
 
 # Criar as tabelas no banco de dados
 Base.metadata.create_all(engine)
+
