@@ -182,5 +182,39 @@ for index, botao in enumerate(botoes_ver):
         else:
             print("Dados do comunicante não encontrados.")
             
+        # --- DADOS DO PROCESSO ---
+        processo_tab = soup.find('div', {'class': 'ltab', 'id': 'lprocesso'})
+        if processo_tab:
+            print("\n=== DADOS DO PROCESSO ===")
+            tabela = processo_tab.find('table', {'class': 'table_simples'})
+            if tabela:
+                linhas = tabela.find('tbody').find_all('tr')
+                for linha in linhas:
+                    # Captura o Status
+                    status = linha.find('td', align="right")
+                    status_text = status.get_text(strip=True) if status else "N/A"
+
+                    # Captura Data/Hora
+                    data_hora = linha.find('input', {'class': 'dpicker2'})
+                    if data_hora and 'value' in data_hora.attrs:
+                        data_hora_text = data_hora['value']
+                    else:
+                        # Caso o valor esteja diretamente no texto
+                        data_hora = linha.find_all('td')[1]
+                        data_hora_text = data_hora.get_text(strip=True) if data_hora else "N/A"
+
+                    # Captura Observação
+                    observacao = linha.find('input', {'id': lambda x: x and x.startswith('obs_')}) or linha.find('textarea')
+                    if observacao and 'value' in observacao.attrs:
+                        observacao_text = observacao['value']
+                    else:
+                        # Caso o valor esteja diretamente no texto
+                        observacao = linha.find_all('td')[-1]
+                        observacao_text = observacao.get_text(strip=True) if observacao else "N/A"
+
+                    print(f"Status: {status_text}, Data/Hora: {data_hora_text}, Observação: {observacao_text}")
+        else:
+            print("Dados do processo não encontrados.")
+            
     except Exception as e:
         print(f"Erro ao processar sinistro {index}: {e}")
