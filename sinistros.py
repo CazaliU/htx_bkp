@@ -244,20 +244,31 @@ for index, botao in enumerate(botoes_ver):
         else:
             print("Dados do processo não encontrados.")
         
-        # Cria uma sessão para interagir com o banco de dados
-        Session = sessionmaker(bind=engine)
-        session = Session()
+
+        # Localiza a aba anexos dentro do modal
+        aba_anexos = driver.find_element(By.CSS_SELECTOR, 'li[data-id="anexos"]')
+        aba_anexos.click()
+        time.sleep(2)  # Aguarde o carregamento da aba
         
+        # Extrai o HTML da página
+        html = driver.page_source
+        # Analisa o HTML com BeautifulSoup
+        soup = BeautifulSoup(html, 'html.parser')
         
+        # URL base do site para transformar os links relativos em absolutos
+        base_url = "https://www.hitex.com.br"
         
-        
-        
-        
-        
-        
-        
-        
-        
+        # Localiza o contêiner com os anexos
+        anexos_container = soup.find('div', class_='anexos_previews')
+
+        # Captura os links das imagens dentro do contêiner de anexos
+        if anexos_container:
+            links = anexos_container.find_all('a', class_='abrir_anexo')
+            imagens = [urljoin(base_url, link['href']) for link in links if 'href' in link.attrs]
+            for link in imagens:
+                print("Link encontrado:", link)
+        else:
+            print("Nenhum anexo encontrado.")
         
         
         
