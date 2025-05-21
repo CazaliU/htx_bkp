@@ -217,4 +217,4 @@ for index, botao in enumerate(botoes_ver):
             print("Dados do processo não encontrados.")
             
     except Exception as e:
-        print(f"Erro ao processar sinistro {index}: {e}")
+      print(f"Erro ao processar sinistro {index}: {e}")
