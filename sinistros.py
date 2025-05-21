@@ -23,8 +23,8 @@ import os
 
 remote_folder = "/var/www/imagens_sinistros/"
 
-def process_images_and_save(session, cliente_id, veiculo_1, veiculo_2, veiculo_3, estado, cidade, tipo, codigo, responsabilidade, descricao_privada, descricao_publica, data_ocorrencia, status, image_links, nomes_imagens):
-    local_folder = f"temp_sinistro_{codigo}"  # Pasta temporária para armazenar as imagens
+def process_images_and_save(session, cliente_id, veiculo_1, veiculo_2, veiculo_3, estado, cidade, tipo, codigo, responsabilidade, descricao_privada, descricao_publica, data_ocorrencia, status, image_links, nomes_imagens, comunicante_nome, comunicante_cpf, comunicante_estado, comunicante_cidade, comunicante_contato1, comunicante_contato2, comunicante_status, comunicante_primeiro_contato, comunicante_narrativa, si_andamento_processo_comunicacao_data_hora, si_andamento_processo_comunicacao_obs_, si_andamento_processo_regulacao_data_hora, si_andamento_processo_regulacao_obs, si_andamento_processo_resolucao_data_hora, si_andamento_processo_resolucao_obs, si_andamento_processo_reforma_pagamento_data_hora, si_andamento_processo_reforma_pagamento_obs, si_andamento_processo_conclusao_data_hora, si_andamento_processo_conclusao_obs, si_andamento_processo_rateio):
+    local_folder = f"temp_sinistro_{codigo}"
     remote_paths = []
 
     try:
@@ -64,19 +64,39 @@ def process_images_and_save(session, cliente_id, veiculo_1, veiculo_2, veiculo_3
         # Salva os dados do sinistro no banco de dados
         novo_sinistro = Sinistros(
             si_cliente_id=cliente_id,
-            si_veiculo_1=veiculo_1,
-            si_veiculo_2=veiculo_2,
-            si_veiculo_3=veiculo_3,
-            si_estado=estado,
-            si_cidade=cidade,
-            si_tipo=tipo,
-            si_codigo=codigo,
-            si_responsabilidade=responsabilidade,
-            si_descricao_privada=descricao_privada,
-            si_descricao_publica=descricao_publica,
-            si_data_ocorrencia=data_ocorrencia,
-            si_status=status,
-            si_caminho_anexos=remote_paths  # Salva os caminhos completos no banco
+            si_veiculo_1=str(veiculo_1) if veiculo_1 else None,
+            si_veiculo_2=str(veiculo_2) if veiculo_2 else None,
+            si_veiculo_3=str(veiculo_3) if veiculo_3 else None,
+            si_estado=str(estado) if estado else None,
+            si_cidade=str(cidade) if cidade else None,
+            si_tipo=str(tipo) if tipo else None,
+            si_codigo=str(codigo) if codigo else None,
+            si_responsabilidade=str(responsabilidade) if responsabilidade else None,
+            si_descricao_privada=str(descricao_privada) if descricao_privada else None,
+            si_descricao_publica=str(descricao_publica) if descricao_publica else None,
+            si_data_ocorrencia=str(data_ocorrencia) if data_ocorrencia else None,
+            si_status=str(status) if status else None,
+            si_caminho_anexos=remote_paths,
+            si_comunicante_nome=str(comunicante_nome) if comunicante_nome else None,
+            si_comunicante_cpf=str(comunicante_cpf) if comunicante_cpf else None,
+            si_comunicante_estado=str(comunicante_estado) if comunicante_estado else None,
+            si_comunicante_cidade=str(comunicante_cidade) if comunicante_cidade else None,
+            si_comunicante_contato1=str(comunicante_contato1) if comunicante_contato1 else None,
+            si_comunicante_contato2=str(comunicante_contato2) if comunicante_contato2 else None,
+            si_comunicante_status=str(comunicante_status) if comunicante_status else None,
+            si_comunicante_primeiro_contato=str(comunicante_primeiro_contato) if comunicante_primeiro_contato else None,
+            si_comunicante_narrativa=str(comunicante_narrativa) if comunicante_narrativa else None,
+            si_andamento_processo_comunicacao_data_hora=str(si_andamento_processo_comunicacao_data_hora) if si_andamento_processo_comunicacao_data_hora else None,
+            si_andamento_processo_comunicacao_obs_=str(si_andamento_processo_comunicacao_obs_) if si_andamento_processo_comunicacao_obs_ else None,
+            si_andamento_processo_regulacao_data_hora=str(si_andamento_processo_regulacao_data_hora) if si_andamento_processo_regulacao_data_hora else None,
+            si_andamento_processo_regulacao_obs=str(si_andamento_processo_regulacao_obs) if si_andamento_processo_regulacao_obs else None,
+            si_andamento_processo_resolucao_data_hora=str(si_andamento_processo_resolucao_data_hora) if si_andamento_processo_resolucao_data_hora else None,
+            si_andamento_processo_resolucao_obs=str(si_andamento_processo_resolucao_obs) if si_andamento_processo_resolucao_obs else None,
+            si_andamento_processo_reforma_pagamento_data_hora=str(si_andamento_processo_reforma_pagamento_data_hora) if si_andamento_processo_reforma_pagamento_data_hora else None,
+            si_andamento_processo_reforma_pagamento_obs=str(si_andamento_processo_reforma_pagamento_obs) if si_andamento_processo_reforma_pagamento_obs else None,
+            si_andamento_processo_conclusao_data_hora=str(si_andamento_processo_conclusao_data_hora) if si_andamento_processo_conclusao_data_hora else None,
+            si_andamento_processo_conclusao_obs=str(si_andamento_processo_conclusao_obs) if si_andamento_processo_conclusao_obs else None,
+            si_andamento_processo_rateio=str(si_andamento_processo_rateio) if si_andamento_processo_rateio else None
         )
         session.add(novo_sinistro)
         session.commit()
@@ -182,6 +202,8 @@ for index, botao in enumerate(botoes_ver):
             responsabilidade = None
             descricao_privada = None
             descricao_publica = None
+            data_ocorrencia = None
+            status = None
 
             campos = [
                 "Veículos:",
@@ -266,6 +288,148 @@ for index, botao in enumerate(botoes_ver):
 
         else:
             print("Dados do sinistro não encontrados.")
+            
+        # --- DADOS DO COMUNICANTE ---
+        comunicante_tab = soup.find('div', {'class': 'ltab', 'id': 'lcomunicante'})
+        if comunicante_tab:
+            print("\n=== DADOS DO COMUNICANTE ===")
+            comunicante_nome = None
+            comunicante_cpf = None
+            comunicante_estado = None
+            comunicante_cidade = None
+            comunicante_contato1 = None
+            comunicante_contato2 = None
+            comunicante_status = None
+            comunicante_primeiro_contato = None
+            comunicante_narrativa = None
+
+            campos = [
+                "Nome:",
+                "CPF:",
+                "Estado:",
+                "Cidade:",
+                "Contato 1:",
+                "Contato 2:",
+                "Status:",
+                "Primeiro Contato:"
+            ]
+
+            for campo in campos:
+                b_tag = comunicante_tab.find('b', string=campo)
+                if b_tag:
+                    if campo == "Status:":
+                        # Para "Status:", pode estar dentro de uma div.label
+                        label = b_tag.find_next('div', class_='label')
+                        valor = label.get_text(strip=True) if label else None
+                    else:
+                        # Para os outros campos, pega o próximo elemento irmão
+                        valor = b_tag.next_sibling
+                        valor = valor.strip() if valor else None
+
+                    # Atribui o valor ao campo correspondente
+                    if campo == "Nome:":
+                        comunicante_nome = valor
+                    elif campo == "CPF:":
+                        comunicante_cpf = valor
+                    elif campo == "Estado:":
+                        comunicante_estado = valor
+                    elif campo == "Cidade:":
+                        comunicante_cidade = valor
+                    elif campo == "Contato 1:":
+                        comunicante_contato1 = valor
+                    elif campo == "Contato 2:":
+                        comunicante_contato2 = valor
+                    elif campo == "Status:":
+                        comunicante_status = valor
+                    elif campo == "Primeiro Contato:":
+                        comunicante_primeiro_contato = valor
+
+                    print(f"{campo} {valor}")
+
+            # Captura a narrativa
+            narrativa = comunicante_tab.find('div', class_='well')
+            if narrativa:
+                comunicante_narrativa = narrativa.get_text(strip=True)
+                print("Narrativa:", comunicante_narrativa)
+
+        else:
+            print("Dados do comunicante não encontrados.")
+            
+        # --- DADOS DO PROCESSO ---
+        processo_tab = soup.find('div', {'class': 'ltab', 'id': 'lprocesso'})
+        if processo_tab:
+            print("\n=== DADOS DO PROCESSO ===")
+
+            # Inicializa as variáveis do processo como None
+            si_andamento_processo_comunicacao_data_hora = None
+            si_andamento_processo_comunicacao_obs_ = None
+            si_andamento_processo_regulacao_data_hora = None
+            si_andamento_processo_regulacao_obs = None
+            si_andamento_processo_resolucao_data_hora = None
+            si_andamento_processo_resolucao_obs = None
+            si_andamento_processo_reforma_pagamento_data_hora = None
+            si_andamento_processo_reforma_pagamento_obs = None
+            si_andamento_processo_conclusao_data_hora = None
+            si_andamento_processo_conclusao_obs = None
+            si_andamento_processo_rateio = None
+
+            tabela = processo_tab.find('table', {'class': 'table_simples'})
+            if tabela:
+                linhas = tabela.find('tbody').find_all('tr')
+                for linha in linhas:
+                    # Captura o Status
+                    status = linha.find('td', align="right")
+                    processo_status = status.get_text(strip=True) if status else None
+
+                    # Captura Data/Hora
+                    data_hora = linha.find('input', {'class': 'dpicker2'})
+                    if data_hora and 'value' in data_hora.attrs:
+                        processo_data_hora = data_hora['value']
+                    else:
+                        # Caso o valor esteja diretamente no texto
+                        data_hora = linha.find_all('td')[1]
+                        processo_data_hora = data_hora.get_text(strip=True) if data_hora else None
+
+                    # Captura Observação
+                    observacao_input = linha.find('input', {'id': lambda x: x and x.startswith('obs_')})
+                    observacao_textarea = linha.find('textarea')
+                    observacao = None
+
+                    if observacao_input and 'value' in observacao_input.attrs:
+                        observacao = observacao_input['value']
+                    elif observacao_textarea:
+                        observacao = observacao_textarea.get_text(strip=True)
+                    else:
+                        # Caso o valor esteja diretamente no texto
+                        observacao = linha.find_all('td')[-1].get_text(strip=True)
+
+                    processo_observacao = observacao if observacao else None
+
+                    # Mapeia os dados para os campos correspondentes
+                    if processo_status == "Comunicação:":
+                        si_andamento_processo_comunicacao_data_hora = processo_data_hora
+                        si_andamento_processo_comunicacao_obs_ = processo_observacao
+                    elif processo_status == "Regulação:":
+                        si_andamento_processo_regulacao_data_hora = processo_data_hora
+                        si_andamento_processo_regulacao_obs = processo_observacao
+                    elif processo_status == "Resolução:":
+                        si_andamento_processo_resolucao_data_hora = processo_data_hora
+                        si_andamento_processo_resolucao_obs = processo_observacao
+                    elif processo_status == "Reforma / Pagamento:":
+                        si_andamento_processo_reforma_pagamento_data_hora = processo_data_hora
+                        si_andamento_processo_reforma_pagamento_obs = processo_observacao
+                    elif processo_status == "Conclusão:":
+                        si_andamento_processo_conclusao_data_hora = processo_data_hora
+                        si_andamento_processo_conclusao_obs = processo_observacao
+                    elif processo_status == "Rateio:":
+                        si_andamento_processo_rateio = "Automático"  # Valor fixo para Rateio
+                        si_andamento_processo_status = processo_observacao  # Observação é usada como status do rateio
+
+                    print(f"Status: {processo_status}, Data/Hora: {processo_data_hora}, Observação: {processo_observacao}")
+            else:
+                print("Tabela de dados do processo não encontrada.")
+        else:
+            print("Dados do processo não encontrados.")
 
 
         # Localiza a aba anexos dentro do modal
@@ -308,10 +472,6 @@ for index, botao in enumerate(botoes_ver):
                     imagens.append((href, novo_nome))  # Armazena o link completo e o novo nome
                     nomes_imagens.append(caminho_completo)  # Salva o caminho completo no banco de dados
                     
-                    print("Link completo:", href)
-                    print("Novo nome da imagem:", novo_nome)
-                    print("Caminho completo para o banco de dados:", caminho_completo)
-
             # Processa as imagens e salva os dados no banco de dados
             if cliente:
                 process_images_and_save(
@@ -329,8 +489,28 @@ for index, botao in enumerate(botoes_ver):
                     descricao_publica=descricao_publica,
                     data_ocorrencia=data_ocorrencia,
                     status=status,
-                    image_links=imagens,  # Passa os links completos e os novos nomes
-                    nomes_imagens=nomes_imagens  # Passa os caminhos completos para salvar no banco
+                    image_links=imagens,
+                    nomes_imagens=nomes_imagens,
+                    comunicante_nome=comunicante_nome,
+                    comunicante_cpf=comunicante_cpf,
+                    comunicante_estado=comunicante_estado,
+                    comunicante_cidade=comunicante_cidade,
+                    comunicante_contato1=comunicante_contato1,
+                    comunicante_contato2=comunicante_contato2,
+                    comunicante_status=comunicante_status,
+                    comunicante_primeiro_contato=comunicante_primeiro_contato,
+                    comunicante_narrativa=comunicante_narrativa,
+                    si_andamento_processo_comunicacao_data_hora=si_andamento_processo_comunicacao_data_hora,
+                    si_andamento_processo_comunicacao_obs_=si_andamento_processo_comunicacao_obs_,
+                    si_andamento_processo_regulacao_data_hora=si_andamento_processo_regulacao_data_hora,
+                    si_andamento_processo_regulacao_obs=si_andamento_processo_regulacao_obs,
+                    si_andamento_processo_resolucao_data_hora=si_andamento_processo_resolucao_data_hora,
+                    si_andamento_processo_resolucao_obs=si_andamento_processo_resolucao_obs,
+                    si_andamento_processo_reforma_pagamento_data_hora=si_andamento_processo_reforma_pagamento_data_hora,
+                    si_andamento_processo_reforma_pagamento_obs=si_andamento_processo_reforma_pagamento_obs,
+                    si_andamento_processo_conclusao_data_hora=si_andamento_processo_conclusao_data_hora,
+                    si_andamento_processo_conclusao_obs=si_andamento_processo_conclusao_obs,
+                    si_andamento_processo_rateio=si_andamento_processo_rateio              
                 )
         else:
             print("Nenhum anexo encontrado.")
@@ -339,7 +519,9 @@ for index, botao in enumerate(botoes_ver):
         pyautogui.click(x=1756, y=557)
             
     except Exception as e:
-      print(f"Erro ao processar sinistro {index}: {e}")
+        # fecha modal
+        pyautogui.click(x=1756, y=557)
+        print(f"Erro ao processar sinistro {index}: {e}")
 
 # Fecha o navegador
 driver.quit()
