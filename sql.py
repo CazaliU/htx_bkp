@@ -198,7 +198,6 @@ class Sinistros(Base):
     si_cidade = Column(String, nullable=True)  # Cidade do sinistro
     si_tipo = Column(String, nullable=True)  # Tipo do sinistro
     si_responsabilidade = Column(String, nullable=True)  # Responsabilidade do sinistro
-    si_descricao = Column(String, nullable=True)  # Descrição geral do sinistro
     si_descricao_privada = Column(String, nullable=True)  # Descrição privada
     si_descricao_publica = Column(String, nullable=True)  # Descrição pública
     si_comunicante_nome = Column(String, nullable=True)  # Nome do comunicante

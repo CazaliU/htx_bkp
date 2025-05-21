@@ -17,8 +17,48 @@ import pyautogui
 import paramiko
 import requests
 import shutil
+import re
 import time
 import os
+
+def save_to_database(session, cliente_id, veiculo_1, veiculo_2, veiculo_3, estado, cidade, tipo, codigo, responsabilidade, descricao_privada, descricao_publica, data_ocorrencia, status):
+    try:
+        # Substitui strings vazias por None
+        veiculo_1 = veiculo_1 if veiculo_1 and veiculo_1.strip() else None
+        veiculo_2 = veiculo_2 if veiculo_2 and veiculo_2.strip() else None
+        veiculo_3 = veiculo_3 if veiculo_3 and veiculo_3.strip() else None
+        estado = estado if estado.strip() else None
+        cidade = cidade if cidade.strip() else None
+        tipo = tipo if tipo.strip() else None
+        codigo = codigo if codigo.strip() else None
+        responsabilidade = responsabilidade if responsabilidade.strip() else None
+        descricao_privada = descricao_privada if descricao_privada.strip() else None
+        descricao_publica = descricao_publica if descricao_publica.strip() else None
+        data_ocorrencia = data_ocorrencia if data_ocorrencia.strip() else None
+        status = status if status.strip() else None
+
+        # Cria um único registro para o sinistro
+        novo_sinistro = Sinistros(
+            si_cliente_id=cliente_id,
+            si_veiculo_1=veiculo_1,
+            si_veiculo_2=veiculo_2,
+            si_veiculo_3=veiculo_3,
+            si_estado=estado,
+            si_cidade=cidade,
+            si_tipo=tipo,
+            si_codigo=codigo,
+            si_responsabilidade=responsabilidade,
+            si_descricao_privada=descricao_privada,
+            si_descricao_publica=descricao_publica,
+            si_data_ocorrencia=data_ocorrencia,
+            si_status=status
+        )
+        session.add(novo_sinistro)
+        session.commit()
+        print("Dados do sinistro salvos no banco de dados com sucesso!")
+    except Exception as e:
+        print(f"Erro ao salvar no banco de dados: {e}")
+        session.rollback()
 
 
 # Obter as credenciais a partir das variáveis de ambiente
@@ -97,63 +137,82 @@ for index, botao in enumerate(botoes_ver):
         if sinistro_tab:
             print("=== DADOS DO SINISTRO ===")
             integrante_nome = None
+            veiculos = []
+            si_veiculo_1 = None
+            si_veiculo_2 = None
+            si_veiculo_3 = None
+            estado = None
+            cidade = None
+            tipo = None
+            codigo = None
+            responsabilidade = None
+            descricao_privada = None
+            descricao_publica = None
+
             campos = [
                 "Veículos:",
                 "Integrante:",
+                "Data de Ocorrência:",
+                "Status:",
                 "Estado:",
                 "Cidade:",
                 "Tipo:",
                 "Código:",
                 "Responsabilidade:"
             ]
+
             for campo in campos:
                 b_tag = sinistro_tab.find('b', string=campo)
                 if b_tag:
                     if campo == "Integrante:":
-                        # Captura o nome do integrante
                         integrante_nome = b_tag.next_sibling.strip() if b_tag.next_sibling else None
                         print(f"{campo} {integrante_nome}")
-                    else:
-                        valor = b_tag.next_sibling.strip() if b_tag.next_sibling else "N/A"
-                        print(f"{campo} {valor}")
-
-                    # Para "Status:", pode estar dentro de uma div.label
-                    if campo == "Status:":
-                        label = b_tag.find_next('div', class_='label')
-                        valor = label.get_text(strip=True) if label else ""
-                    # Para "Código:", pode estar dentro de uma span.label
-                    elif campo == "Código:":
-                        label = b_tag.find_next('span', class_='label')
-                        valor = label.get_text(strip=True) if label else ""
                     elif campo == "Veículos:":
-                        # Captura todas as placas separadas por '#'
-                        veiculos = []
                         sibling = b_tag.next_sibling
                         while sibling:
                             if sibling.name == 'span' and sibling.find('b'):
                                 veiculos.append(sibling.find('b').get_text(strip=True))
-                            elif sibling.string and sibling.string.strip() != "#":  # Ignora o caractere '#'
+                            elif sibling.string and sibling.string.strip() != "#" and sibling.string.strip():
                                 veiculos.append(sibling.string.strip())
                             sibling = sibling.next_sibling
-                        print(f"{campo} {', '.join(veiculos)}")  # Exibe todas as placas
-                        continue
-                    else:
-                        # O valor geralmente está logo após o <b>
-                        valor = b_tag.next_sibling
-                        if valor:
-                            valor = valor.strip()
-                        else:
-                            valor = ""
-                        print(f"{campo} {valor}")
+                        print(f"{campo} {', '.join(veiculos)}")
 
-            # Descrição Privada e Pública
+                        # Filtra valores inválidos como '#'
+                        veiculos = [placa for placa in veiculos if placa != "#"]
+
+                        # Divide as placas em até 3 partes
+                        si_veiculo_1 = veiculos[0] if len(veiculos) > 0 else None
+                        si_veiculo_2 = veiculos[1] if len(veiculos) > 1 else None
+                        si_veiculo_3 = veiculos[2] if len(veiculos) > 2 else None
+                    elif campo == "Data de Ocorrência:":
+                        data_ocorrencia = b_tag.next_sibling.strip() if b_tag.next_sibling else None
+                        print(f"{campo} {data_ocorrencia}")
+                    elif campo == "Status:":
+                        status = b_tag.next_sibling.strip() if b_tag.next_sibling else None
+                        print(f"{campo} {status}")
+                    elif campo == "Estado:":
+                        estado = b_tag.next_sibling.strip() if b_tag.next_sibling else None
+                        print(f"{campo} {estado}")
+                    elif campo == "Cidade:":
+                        cidade = b_tag.next_sibling.strip() if b_tag.next_sibling else None
+                        print(f"{campo} {cidade}")
+                    elif campo == "Tipo:":
+                        tipo = b_tag.next_sibling.strip() if b_tag.next_sibling else None
+                        print(f"{campo} {tipo}")
+                    elif campo == "Código:":
+                        label = b_tag.find_next('span', class_='label')  # Busca o próximo elemento <span> com a classe 'label'
+                        raw_codigo = label.get_text(strip=True) if label else None  # Captura o texto bruto
+                        codigo = re.sub(r'\D', '', raw_codigo) if raw_codigo else None  # Remove todos os caracteres não numéricos
+                        print(f"{campo} {codigo}")
+                    elif campo == "Responsabilidade:":
+                        responsabilidade = b_tag.next_sibling.strip() if b_tag.next_sibling else None
+                        print(f"{campo} {responsabilidade}")
+
+
             wells = sinistro_tab.find_all('div', class_='well')
-            if len(wells) > 0:
-                print("Descrição Privada:", wells[0].get_text(strip=True))
-            if len(wells) > 1:
-                print("Descrição Pública:", wells[1].get_text(strip=True))
+            descricao_privada = wells[0].get_text(strip=True) if len(wells) > 0 else None
+            descricao_publica = wells[1].get_text(strip=True) if len(wells) > 1 else None
 
-            # Se o nome do integrante foi encontrado, busca o ID do cliente no banco de dados
             if integrante_nome:
                 try:
                     Session = sessionmaker(bind=engine)
@@ -163,43 +222,61 @@ for index, botao in enumerate(botoes_ver):
                         print(f"ID do cliente encontrado: {cliente.id}")
                     else:
                         print(f"Nenhum cliente encontrado para o integrante: {integrante_nome}")
-                        # fecha modal
                         pyautogui.click(x=1756, y=557)
                         time.sleep(1)
                         continue
-                        
                 except Exception as e:
                     print(f"Erro ao buscar o cliente no banco de dados: {e}")
                 finally:
                     session.close()
+
+            # Salva os dados no banco de dados
+            if cliente:
+                save_to_database(
+                    session=session,
+                    cliente_id=cliente.id,
+                    veiculo_1=si_veiculo_1,
+                    veiculo_2=si_veiculo_2,
+                    veiculo_3=si_veiculo_3,
+                    estado=estado,
+                    cidade=cidade,
+                    tipo=tipo,
+                    codigo=codigo,
+                    responsabilidade=responsabilidade,
+                    descricao_privada=descricao_privada,
+                    descricao_publica=descricao_publica,
+                    data_ocorrencia=data_ocorrencia,
+                    status=status
+                )
+
         else:
             print("Dados do sinistro não encontrados.")
 
 
-        # Localiza a aba anexos dentro do modal
-        aba_anexos = driver.find_element(By.CSS_SELECTOR, 'li[data-id="anexos"]')
-        aba_anexos.click()
-        time.sleep(2)  # Aguarde o carregamento da aba
+        # # Localiza a aba anexos dentro do modal
+        # aba_anexos = driver.find_element(By.CSS_SELECTOR, 'li[data-id="anexos"]')
+        # aba_anexos.click()
+        # time.sleep(2)  # Aguarde o carregamento da aba
         
-        # Extrai o HTML da página
-        html = driver.page_source
-        # Analisa o HTML com BeautifulSoup
-        soup = BeautifulSoup(html, 'html.parser')
+        # # Extrai o HTML da página
+        # html = driver.page_source
+        # # Analisa o HTML com BeautifulSoup
+        # soup = BeautifulSoup(html, 'html.parser')
         
-        # URL base do site para transformar os links relativos em absolutos
-        base_url = "https://www.hitex.com.br"
+        # # URL base do site para transformar os links relativos em absolutos
+        # base_url = "https://www.hitex.com.br"
         
-        # Localiza o contêiner com os anexos
-        anexos_container = soup.find('div', class_='anexos_previews')
+        # # Localiza o contêiner com os anexos
+        # anexos_container = soup.find('div', class_='anexos_previews')
 
-        # Captura os links das imagens dentro do contêiner de anexos
-        if anexos_container:
-            links = anexos_container.find_all('a', class_='abrir_anexo')
-            imagens = [urljoin(base_url, link['href']) for link in links if 'href' in link.attrs]
-            for link in imagens:
-                print("Link encontrado:", link)
-        else:
-            print("Nenhum anexo encontrado.")
+        # # Captura os links das imagens dentro do contêiner de anexos
+        # if anexos_container:
+        #     links = anexos_container.find_all('a', class_='abrir_anexo')
+        #     imagens = [urljoin(base_url, link['href']) for link in links if 'href' in link.attrs]
+        #     for link in imagens:
+        #         print("Link encontrado:", link)
+        # else:
+        #     print("Nenhum anexo encontrado.")
         
         
         
@@ -214,35 +291,3 @@ for index, botao in enumerate(botoes_ver):
 driver.quit()
 
 
-def save_to_database(session, cliente_id, veiculos, estado, cidade, tipo, codigo, responsabilidade, descricao_privada, descricao_publica):
-    try:
-        # print(f"Links das imagens antes da conversão: {image_links}")
-
-        # Substitui strings vazias por None
-        veiculos = veiculos if veiculos.strip() else None
-        estado = estado if estado.strip() else None
-        cidade = cidade if cidade.strip() else None
-        tipo = tipo if tipo.strip() else None
-        codigo = codigo if codigo.strip() else None
-        responsabilidade = responsabilidade if responsabilidade.strip() else None
-        descricao_privada = descricao_privada if descricao_privada.strip() else None
-        descricao_publica = descricao_publica if descricao_publica.strip() else None
-
-        # Cria um único registro para o sinistro
-        novo_sinistro = Sinistros(
-            cliente_id=cliente_id,  # ID do cliente associado
-            veiculos=veiculos,  # Placas dos veículos
-            estado=estado,  # Estado do sinistro
-            cidade=cidade,  # Cidade do sinistro
-            tipo=tipo,  # Tipo do sinistro
-            codigo=codigo,  # Código do sinistro
-            responsabilidade=responsabilidade,  # Responsabilidade do sinistro
-            descricao_privada=descricao_privada,  # Descrição privada
-            descricao_publica=descricao_publica,  # Descrição pública
-        )
-        session.add(novo_sinistro)
-        session.commit()
-        print("Dados do sinistro salvos no banco de dados com sucesso!")
-    except Exception as e:
-        print(f"Erro ao salvar no banco de dados: {e}")
-        session.rollback()
