@@ -171,6 +171,10 @@ print(f"Total de botões encontrados: {len(botoes_ver)}")
 # Itera sobre os botões
 for index, botao in enumerate(botoes_ver):
     try:
+        # Fecha o modal antes de iniciar a próxima iteração (caso esteja aberto)
+        pyautogui.click(x=153, y=656)
+        time.sleep(1)
+        
         print(f"Acessando botão {index + 1} de {len(botoes_ver)}")
                       
         # Scroll até o botão para garantir que ele esteja visível
@@ -283,12 +287,12 @@ for index, botao in enumerate(botoes_ver):
                         sinistro_existente = session.query(Sinistros).filter(Sinistros.si_codigo == codigo).first()
                         if sinistro_existente:
                             print(f"Código {codigo} já existe no banco de dados. Pulando para o próximo sinistro.")
-                            pyautogui.click(x=1756, y=557)  # Fecha o modal
+                            pyautogui.click(x=153, y=656)  # Fecha o modal
                             time.sleep(1)
                             continue  # Pula para o próximo item no loop
                     else:
                         print(f"Nenhum cliente encontrado para o integrante: {integrante_nome}")
-                        pyautogui.click(x=1756, y=557)
+                        pyautogui.click(x=153, y=656)
                         time.sleep(1)
                         continue
                 except Exception as e:
@@ -526,11 +530,11 @@ for index, botao in enumerate(botoes_ver):
             print("Nenhum anexo encontrado.")
         
         # fecha modal
-        pyautogui.click(x=1756, y=557)
+        pyautogui.click(x=153, y=656)
             
     except Exception as e:
         # fecha modal
-        pyautogui.click(x=1756, y=557)
+        pyautogui.click(x=153, y=656)
         print(f"Erro ao processar sinistro {index}: {e}")
 
 # Fecha o navegador

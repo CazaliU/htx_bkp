@@ -223,3 +223,24 @@ class Sinistros(Base):
     si_andamento_processo_status = Column(String, nullable=True)  # Status do processo
     si_caminho_anexos = Column(JSON, nullable=True)  # Caminhos dos anexos (armazenados como JSON)
     si_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
+    
+
+class Lancamentos(Base):
+    __tablename__ = 'lancamentos'
+
+    fi_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada lançamento
+    fi_veiculo = Column(String, nullable=True)  # Veículo associado ao lançamento
+    fi_integrante = Column(String, nullable=True)  # Integrante associado ao lançamento
+    fi_operacao = Column(String, nullable=True)  # Operação realizada
+    fi_conta = Column(String, nullable=True)  # Conta associada ao lançamento
+    fi_situacao = Column(String, nullable=True)  # Situação do lançamento
+    fi_data = Column(String, nullable=True)  # Data do lançamento
+    fi_compensacao = Column(String, nullable=True)  # Data de compensação
+    fi_tipo = Column(String, nullable=True)  # Tipo do lançamento
+    fi_referente = Column(String, nullable=True)  # Referente ao lançamento
+    fi_valor = Column(String, nullable=True)  # Valor do lançamento
+    fi_obs = Column(String, nullable=True)  # Observações adicionais
+    fi_anexos = Column(JSON, nullable=True)  # Anexos associados ao lançamento (armazenados como JSON)
+    fi_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
+    fi_cliente_id = Column(Integer, ForeignKey('clientes.cl_id', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'clientes'
+    fi_sinistro_codigo = Column(Integer, ForeignKey('sinistros.si_codigo', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'sinistros'
