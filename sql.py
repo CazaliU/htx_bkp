@@ -182,6 +182,45 @@ class VistoriaImagens(Base):
     vi_caminho = Column(JSON, nullable=False)  # Caminhos das imagens (armazenados como JSON ou string delimitada)
 
 
-# Criar as tabelas no banco de dados
-Base.metadata.create_all(engine)
 
+class Sinistros(Base):
+    __tablename__ = 'sinistros'
+
+    si_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada sinistro
+    si_codigo = Column(Integer, unique=True, nullable=False)  # Código único do sinistro
+    si_cliente_id = Column(Integer, ForeignKey('clientes.cl_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para a tabela 'clientes'
+    si_veiculo_1 = Column(String, nullable=False)  # Veículo principal
+    si_veiculo_2 = Column(String, nullable=True)  # Veículo adicional 1
+    si_veiculo_3 = Column(String, nullable=True)  # Veículo adicional 2
+    si_data_ocorrencia = Column(String, nullable=True)  # Data da ocorrência
+    si_status = Column(String, nullable=True)  # Status do sinistro
+    si_estado = Column(String, nullable=True)  # Estado do sinistro
+    si_cidade = Column(String, nullable=True)  # Cidade do sinistro
+    si_tipo = Column(String, nullable=True)  # Tipo do sinistro
+    si_responsabilidade = Column(String, nullable=True)  # Responsabilidade do sinistro
+    si_descricao = Column(String, nullable=True)  # Descrição geral do sinistro
+    si_descricao_privada = Column(String, nullable=True)  # Descrição privada
+    si_descricao_publica = Column(String, nullable=True)  # Descrição pública
+    si_comunicante_nome = Column(String, nullable=True)  # Nome do comunicante
+    si_comunicante_cidade = Column(String, nullable=True)  # Cidade do comunicante
+    si_comunicante_estado = Column(String, nullable=True)  # Estado do comunicante
+    si_comunicante_cpf = Column(String, nullable=True)  # CPF do comunicante
+    si_comunicante_contato1 = Column(String, nullable=True)  # Contato 1 do comunicante
+    si_comunicante_contato2 = Column(String, nullable=True)  # Contato 2 do comunicante
+    si_comunicante_status = Column(String, nullable=True)  # Status do comunicante
+    si_comunicante_primeiro_contato = Column(String, nullable=True)  # Primeiro contato do comunicante
+    si_comunicante_narrativa = Column(String, nullable=True)  # Narrativa do comunicante
+    si_andamento_processo_comunicacao_data_hora = Column(String, nullable=True)  # Data/hora da comunicação
+    si_andamento_processo_comunicacao_obs_ = Column(String, nullable=True)  # Observação da comunicação
+    si_andamento_processo_regulacao_data_hora = Column(String, nullable=True)  # Data/hora da regulação
+    si_andamento_processo_regulacao_obs = Column(String, nullable=True)  # Observação da regulação
+    si_andamento_processo_resolucao_data_hora = Column(String, nullable=True)  # Data/hora da resolução
+    si_andamento_processo_resolucao_obs = Column(String, nullable=True)  # Observação da resolução
+    si_andamento_processo_reforma_pagamento_data_hora = Column(String, nullable=True)  # Data/hora do pagamento da reforma
+    si_andamento_processo_reforma_pagamento_obs = Column(String, nullable=True)  # Observação do pagamento da reforma
+    si_andamento_processo_conclusao_data_hora = Column(String, nullable=True)  # Data/hora da conclusão
+    si_andamento_processo_conclusao_obs = Column(String, nullable=True)  # Observação da conclusão
+    si_andamento_processo_rateio = Column(String, nullable=True)  # Rateio do processo
+    si_andamento_processo_status = Column(String, nullable=True)  # Status do processo
+    si_caminho_anexos = Column(JSON, nullable=True)  # Caminhos dos anexos (armazenados como JSON)
+    si_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro

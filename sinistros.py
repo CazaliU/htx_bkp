@@ -3,7 +3,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from sql import engine, DadosClientes
+from sql import engine, DadosClientes, Sinistros
 from sqlalchemy.orm import sessionmaker, session
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -174,76 +174,7 @@ for index, botao in enumerate(botoes_ver):
                     session.close()
         else:
             print("Dados do sinistro não encontrados.")
-    
-        # --- DADOS DO COMUNICANTE ---
-        comunicante_tab = soup.find('div', {'class': 'ltab', 'id': 'lcomunicante'})
-        if comunicante_tab:
-            print("\n=== DADOS DO COMUNICANTE ===")
-            campos = [
-                "Nome:",
-                "CPF:",
-                "Estado:",
-                "Cidade:",
-                "Contato 1:",
-                "Contato 2:",
-                "Status:",
-                "Primeiro Contato:"
-            ]
-            for campo in campos:
-                b_tag = comunicante_tab.find('b', string=campo)
-                if b_tag:
-                    # Para "Status:", pode estar dentro de uma div.label
-                    if campo == "Status:":
-                        label = b_tag.find_next('div', class_='label')
-                        valor = label.get_text(strip=True) if label else ""
-                    else:
-                        valor = b_tag.next_sibling
-                        if valor:
-                            valor = valor.strip()
-                        else:
-                            valor = ""
-                    print(f"{campo} {valor}")
-            # Narrativa
-            narrativa = comunicante_tab.find('div', class_='well')
-            if narrativa:
-                print("Narrativa:", narrativa.get_text(strip=True))
-        else:
-            print("Dados do comunicante não encontrados.")
-            
-        # --- DADOS DO PROCESSO ---
-        processo_tab = soup.find('div', {'class': 'ltab', 'id': 'lprocesso'})
-        if processo_tab:
-            print("\n=== DADOS DO PROCESSO ===")
-            tabela = processo_tab.find('table', {'class': 'table_simples'})
-            if tabela:
-                linhas = tabela.find('tbody').find_all('tr')
-                for linha in linhas:
-                    # Captura o Status
-                    status = linha.find('td', align="right")
-                    status_text = status.get_text(strip=True) if status else "N/A"
 
-                    # Captura Data/Hora
-                    data_hora = linha.find('input', {'class': 'dpicker2'})
-                    if data_hora and 'value' in data_hora.attrs:
-                        data_hora_text = data_hora['value']
-                    else:
-                        # Caso o valor esteja diretamente no texto
-                        data_hora = linha.find_all('td')[1]
-                        data_hora_text = data_hora.get_text(strip=True) if data_hora else "N/A"
-
-                    # Captura Observação
-                    observacao = linha.find('input', {'id': lambda x: x and x.startswith('obs_')}) or linha.find('textarea')
-                    if observacao and 'value' in observacao.attrs:
-                        observacao_text = observacao['value']
-                    else:
-                        # Caso o valor esteja diretamente no texto
-                        observacao = linha.find_all('td')[-1]
-                        observacao_text = observacao.get_text(strip=True) if observacao else "N/A"
-
-                    print(f"Status: {status_text}, Data/Hora: {data_hora_text}, Observação: {observacao_text}")
-        else:
-            print("Dados do processo não encontrados.")
-        
 
         # Localiza a aba anexos dentro do modal
         aba_anexos = driver.find_element(By.CSS_SELECTOR, 'li[data-id="anexos"]')
@@ -281,3 +212,37 @@ for index, botao in enumerate(botoes_ver):
 
 # Fecha o navegador
 driver.quit()
+
+
+def save_to_database(session, cliente_id, veiculos, estado, cidade, tipo, codigo, responsabilidade, descricao_privada, descricao_publica):
+    try:
+        # print(f"Links das imagens antes da conversão: {image_links}")
+
+        # Substitui strings vazias por None
+        veiculos = veiculos if veiculos.strip() else None
+        estado = estado if estado.strip() else None
+        cidade = cidade if cidade.strip() else None
+        tipo = tipo if tipo.strip() else None
+        codigo = codigo if codigo.strip() else None
+        responsabilidade = responsabilidade if responsabilidade.strip() else None
+        descricao_privada = descricao_privada if descricao_privada.strip() else None
+        descricao_publica = descricao_publica if descricao_publica.strip() else None
+
+        # Cria um único registro para o sinistro
+        novo_sinistro = Sinistros(
+            cliente_id=cliente_id,  # ID do cliente associado
+            veiculos=veiculos,  # Placas dos veículos
+            estado=estado,  # Estado do sinistro
+            cidade=cidade,  # Cidade do sinistro
+            tipo=tipo,  # Tipo do sinistro
+            codigo=codigo,  # Código do sinistro
+            responsabilidade=responsabilidade,  # Responsabilidade do sinistro
+            descricao_privada=descricao_privada,  # Descrição privada
+            descricao_publica=descricao_publica,  # Descrição pública
+        )
+        session.add(novo_sinistro)
+        session.commit()
+        print("Dados do sinistro salvos no banco de dados com sucesso!")
+    except Exception as e:
+        print(f"Erro ao salvar no banco de dados: {e}")
+        session.rollback()
