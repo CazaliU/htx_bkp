@@ -273,9 +273,19 @@ for index, botao in enumerate(botoes_ver):
                 try:
                     Session = sessionmaker(bind=engine)
                     session = Session()
+                           
+                    # Verifica se o cliente existe
                     cliente = session.query(DadosClientes).filter(DadosClientes.razao_social.ilike(f"%{integrante_nome}%")).first()
                     if cliente:
                         print(f"ID do cliente encontrado: {cliente.id}")
+                        
+                        # Verifica se o código já existe no banco de dados
+                        sinistro_existente = session.query(Sinistros).filter(Sinistros.si_codigo == codigo).first()
+                        if sinistro_existente:
+                            print(f"Código {codigo} já existe no banco de dados. Pulando para o próximo sinistro.")
+                            pyautogui.click(x=1756, y=557)  # Fecha o modal
+                            time.sleep(1)
+                            continue  # Pula para o próximo item no loop
                     else:
                         print(f"Nenhum cliente encontrado para o integrante: {integrante_nome}")
                         pyautogui.click(x=1756, y=557)
