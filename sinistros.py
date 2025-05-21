@@ -3,7 +3,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from sql import engine, Veiculos, VistoriaImagens
+from sql import engine, DadosClientes
 from sqlalchemy.orm import sessionmaker, session
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -64,7 +64,7 @@ time.sleep(3)  # Pode ser necessário ajustar o tempo
 # Navega para a página onde está o status
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  
 
-time.sleep(10)
+time.sleep(15)
 
 # Espera até que o modal esteja visível
 modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
@@ -74,6 +74,7 @@ driver.implicitly_wait(10)  # Espera implícita para o modal
 botoes_ver = driver.find_elements(By.CSS_SELECTOR, 'a.info_sinistro')
 print(f"Total de botões encontrados: {len(botoes_ver)}")
 
+# Itera sobre os botões
 for index, botao in enumerate(botoes_ver):
     try:
         print(f"Acessando botão {index + 1} de {len(botoes_ver)}")
@@ -82,8 +83,8 @@ for index, botao in enumerate(botoes_ver):
         ActionChains(driver).move_to_element(botao).perform()
         
         # Clica no botão para abrir o modal
-        # botao.click()
-        time.sleep(25)  # Aguarde o modal carregar
+        botao.click()
+        time.sleep(2)  # Aguarde o modal carregar
         
         # Extrai o HTML da página
         html = driver.page_source
@@ -95,11 +96,10 @@ for index, botao in enumerate(botoes_ver):
         sinistro_tab = soup.find('div', {'class': 'ltab', 'id': 'ldados'})
         if sinistro_tab:
             print("=== DADOS DO SINISTRO ===")
+            integrante_nome = None
             campos = [
                 "Veículos:",
                 "Integrante:",
-                "Data de Ocorrência:",
-                "Status:",
                 "Estado:",
                 "Cidade:",
                 "Tipo:",
@@ -109,6 +109,14 @@ for index, botao in enumerate(botoes_ver):
             for campo in campos:
                 b_tag = sinistro_tab.find('b', string=campo)
                 if b_tag:
+                    if campo == "Integrante:":
+                        # Captura o nome do integrante
+                        integrante_nome = b_tag.next_sibling.strip() if b_tag.next_sibling else None
+                        print(f"{campo} {integrante_nome}")
+                    else:
+                        valor = b_tag.next_sibling.strip() if b_tag.next_sibling else "N/A"
+                        print(f"{campo} {valor}")
+
                     # Para "Status:", pode estar dentro de uma div.label
                     if campo == "Status:":
                         label = b_tag.find_next('div', class_='label')
@@ -136,7 +144,7 @@ for index, botao in enumerate(botoes_ver):
                             valor = valor.strip()
                         else:
                             valor = ""
-                    print(f"{campo} {valor}")
+                        print(f"{campo} {valor}")
 
             # Descrição Privada e Pública
             wells = sinistro_tab.find_all('div', class_='well')
@@ -144,6 +152,26 @@ for index, botao in enumerate(botoes_ver):
                 print("Descrição Privada:", wells[0].get_text(strip=True))
             if len(wells) > 1:
                 print("Descrição Pública:", wells[1].get_text(strip=True))
+
+            # Se o nome do integrante foi encontrado, busca o ID do cliente no banco de dados
+            if integrante_nome:
+                try:
+                    Session = sessionmaker(bind=engine)
+                    session = Session()
+                    cliente = session.query(DadosClientes).filter(DadosClientes.razao_social.ilike(f"%{integrante_nome}%")).first()
+                    if cliente:
+                        print(f"ID do cliente encontrado: {cliente.id}")
+                    else:
+                        print(f"Nenhum cliente encontrado para o integrante: {integrante_nome}")
+                        # fecha modal
+                        pyautogui.click(x=1756, y=557)
+                        time.sleep(1)
+                        continue
+                        
+                except Exception as e:
+                    print(f"Erro ao buscar o cliente no banco de dados: {e}")
+                finally:
+                    session.close()
         else:
             print("Dados do sinistro não encontrados.")
     
@@ -215,6 +243,30 @@ for index, botao in enumerate(botoes_ver):
                     print(f"Status: {status_text}, Data/Hora: {data_hora_text}, Observação: {observacao_text}")
         else:
             print("Dados do processo não encontrados.")
+        
+        # Cria uma sessão para interagir com o banco de dados
+        Session = sessionmaker(bind=engine)
+        session = Session()
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        # fecha modal
+        pyautogui.click(x=1756, y=557)
             
     except Exception as e:
       print(f"Erro ao processar sinistro {index}: {e}")
+
+
+# Fecha o navegador
+driver.quit()
