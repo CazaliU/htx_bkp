@@ -3,7 +3,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from sql import engine, DadosClientes, Sinistros
+from sql import engine, DadosClientes, Lancamentos, Sinistros
 from sqlalchemy.orm import sessionmaker, session
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -20,6 +20,82 @@ import shutil
 import re
 import time
 import os
+
+remote_folder = "/var/www/imagens_lancamentos/"
+
+def process_images_and_save(session, cliente_id, sinistro_codigo, veiculo, integrante, operacao, conta, situacao, data, compensacao, tipo, referente, valor, referencia, image_links, nomes_imagens):
+    local_folder = f"temp_lancamento"
+    remote_paths = []
+
+    try:
+        # Cria a pasta temporária
+        if not os.path.exists(local_folder):
+            os.makedirs(local_folder)
+
+        # Baixa todas as imagens localmente e renomeia
+        for href, novo_nome in image_links:
+            local_path = os.path.join(local_folder, novo_nome)
+
+            # Baixa a imagem
+            response = requests.get(href, stream=True)
+            if response.status_code == 200:
+                with open(local_path, 'wb') as file:
+                    for chunk in response.iter_content(1024):
+                        file.write(chunk)
+                print(f"Imagem baixada e renomeada: {local_path}")  # Agora o nome correto será exibido
+            else:
+                print(f"Erro ao baixar a imagem: {href}")
+
+        # Envia todas as imagens para o servidor
+        transport = paramiko.Transport((host_ssh, port_ssh))
+        transport.connect(username=username_ssh, password=password_ssh)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+
+        for file_name in os.listdir(local_folder):
+            local_path = os.path.join(local_folder, file_name)
+            remote_path = os.path.join(remote_folder, file_name)
+            sftp.put(local_path, remote_path)
+            remote_paths.append(remote_path)  # Salva o caminho completo no banco
+            print(f"Imagem enviada para o servidor: {remote_path}")
+
+        sftp.close()
+        transport.close()
+
+        # Salva os dados do lancamento no banco de dados
+        novo_lancamento = Lancamentos(
+            la_cliente_id=cliente_id if cliente_id else None,
+            la_sinistro_codigo=sinistro_codigo if sinistro_codigo else None,
+            la_veiculo=str(veiculo) if veiculo else None,
+            la_integrante=str(integrante) if integrante else None,
+            la_operacao=str(operacao) if operacao else None,
+            la_conta=str(conta) if conta else None,
+            la_situacao=str(situacao) if situacao else None,
+            la_data=str(data) if data else None,
+            la_compensacao=str(compensacao) if compensacao else None,
+            la_tipo=str(tipo) if tipo else None,
+            la_referente=str(referente) if referente else None,
+            la_valor=str(valor) if valor else None,
+            la_obs=str(referencia) if referencia else None,
+            la_anexos=remote_paths,  # Armazena os links das imagens
+
+        )
+        session.add(novo_lancamento)
+        session.commit()
+        print("Dados do lancamento e caminhos das imagens salvos no banco de dados com sucesso!")
+
+    except Exception as e:
+        print(f"Erro ao processar as imagens: {e}")
+        session.rollback()
+    finally:
+        # Remove a pasta temporária e os arquivos locais
+        if os.path.exists(local_folder):
+            try:
+                print(f"Removendo a pasta temporária: {local_folder}")
+                shutil.rmtree(local_folder)
+                print("Pasta temporária removida com sucesso.")
+            except Exception as e:
+                print(f"Erro ao remover a pasta temporária: {e}")
+
 
 # Obter as credenciais a partir das variáveis de ambiente
 username = os.getenv('APP_USERNAME')
@@ -103,6 +179,7 @@ for index, botao in enumerate(botoes_ver):
         compensacao = None
         tipo = None
         referente = None
+        sinistro_codigo = None
         integrante = None
         sinistro = None
         veiculo = None
@@ -231,8 +308,75 @@ for index, botao in enumerate(botoes_ver):
             finally:
                 # Fecha a sessão
                 session.close()
+            
+        else:
+            print("Dados do lancamento não encontrados.")
                     
-        pyautogui.click(x=153, y=656) 
+        # Localiza a aba anexos dentro do modal
+        aba_anexos = driver.find_element(By.CSS_SELECTOR, 'li[data-id="anexos"]')
+        aba_anexos.click()
+        time.sleep(2)  # Aguarde o carregamento da aba
+           
+        # Extrai o HTML da página
+        html = driver.page_source
+        # Analisa o HTML com BeautifulSoup
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        # URL base do site para transformar os links relativos em absolutos
+        base_url = "https://www.hitex.com.br"
+        
+        # Localiza o contêiner com os anexos
+        anexos_container = soup.find('div', class_='anexos_previews')
+        
+        # Captura os links das imagens dentro do contêiner de anexos
+        if anexos_container:
+            links = anexos_container.find_all('a', class_='abrir_anexo')
+            imagens = []
+            nomes_imagens = []
+            
+            for link in links:
+                href = urljoin(base_url, link['href'])  # Gera o link completo
+                if href:
+                    # Extrai o identificador do parâmetro "a="
+                    identificador = re.search(r'a=([^&]+)', href).group(1)  # Captura o valor após "a="
+                    
+                    # Verifica se o identificador já contém "uni_"
+                    if not identificador.startswith("uni_"):
+                        novo_nome = f"uni_{identificador}"  # Adiciona "uni_" apenas se não estiver presente
+                    else:
+                        novo_nome = identificador  # Usa o identificador diretamente
+                    
+                    # Concatena o caminho do servidor com o nome da imagem
+                    caminho_completo = os.path.join(remote_folder, novo_nome)
+                    
+                    imagens.append((href, novo_nome))  # Armazena o link completo e o novo nome
+                    nomes_imagens.append(caminho_completo)  # Salva o caminho completo no banco de dados
+                    
+                       # Processa as imagens e salva os dados no banco de dados
+            if cliente or sinistro_codigo:
+                process_images_and_save(
+                    session=session,
+                    cliente_id=cliente.id,
+                    sinistro_codigo=sinistro_codigo,
+                    veiculo=veiculo,
+                    integrante=integrante,
+                    operacao=valor_debito_credito,
+                    conta=conta,
+                    situacao=situacao,
+                    data=data,
+                    compensacao=compensacao,
+                    tipo=tipo,
+                    referente=referente,
+                    valor=valor,
+                    referencia=referencia,
+                    image_links=imagens,
+                    nomes_imagens=nomes_imagens
+                )
+        else:
+            print("Nenhum anexo encontrado.")
+        
+        # fecha modal
+        pyautogui.click(x=153, y=656)
         time.sleep(1)
 
     except Exception as e:
