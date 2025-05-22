@@ -141,6 +141,55 @@ for index, botao in enumerate(botoes_ver):
 
                     status_tag = eight_columns.find('b', text=re.compile(r'Status:'))
                     status = status_tag.find_next('span').get_text(strip=True) if status_tag else None
+                    
+                    # Localiza o botão com a classe 'icon-chevron-down' dentro da seção 'eight columns'
+                    chevron_button = eight_columns.find('i', class_='icon icon-chevron-down')
+                    if chevron_button:
+                        try:
+                            # Localiza o elemento no Selenium usando o seletor CSS
+                            chevron_button_element = driver.find_element(By.CSS_SELECTOR, 'div.eight.columns i.icon.icon-chevron-down')
+
+                            # Clica no botão para expandir os dados
+                            chevron_button_element.click()
+                            time.sleep(2)  # Aguarde o carregamento dos dados adicionais
+
+                            # Extrai o HTML atualizado após o clique
+                            html = driver.page_source
+                            soup = BeautifulSoup(html, 'html.parser')
+
+                            # Localiza a tabela dentro da seção expandida
+                            tabela = eight_columns.find('table', class_='table_simples')
+                            if tabela:
+                                try:
+                                    # Captura o cabeçalho da tabela
+                                    cabecalhos = [th.get_text(strip=True) for th in tabela.find_all('th')]
+                                    print(f"Cabeçalhos da tabela: {cabecalhos}")
+
+                                    # Captura as linhas da tabela
+                                    linhas = tabela.find_all('tr')
+                                    dados_tabela = []
+
+                                    for linha in linhas:
+                                        colunas = linha.find_all('td')
+                                        if colunas:
+                                            # Captura os dados de cada coluna
+                                            dados_linha = [coluna.get_text(strip=True) for coluna in colunas]
+                                            dados_tabela.append(dados_linha)
+
+                                    # Exibe os dados capturados
+                                    print("\nDados capturados da tabela:")
+                                    for linha in dados_tabela:
+                                        print(linha)
+
+                                except Exception as e:
+                                    print(f"Erro ao capturar os dados da tabela: {e}")
+                            else:
+                                print("Tabela 'table_simples' não encontrada.")
+
+                        except Exception as e:
+                            print(f"Erro ao clicar no botão para expandir os dados: {e}")
+                    else:
+                        print("Botão 'icon-chevron-down' não encontrado.")
 
                     # Exibe os dados capturados da seção 'eight columns'
                     print("\nDados capturados da seção 'eight columns':")
