@@ -231,6 +231,11 @@ for index, botao in enumerate(botoes_ver):
                     veiculo_tag = eight_columns.find('b', text=re.compile(r'Veículo:'))
                     veiculo = veiculo_tag.next_sibling.strip() if veiculo_tag else None
 
+                    # Extrai apenas a placa usando regex
+                    placa_match = re.search(r'[A-Z]{3}-\d[A-Z0-9]{3}', veiculo) if veiculo else None
+                    placa = placa_match.group(0) if placa_match else None
+                    veiculo = placa if placa else veiculo  # Usa a placa se encontrada, caso contrário, usa o valor original
+
                     # Exibe os valores capturados
                     print("\nDados capturados da seção 'eight columns':")
                     print(f"Valor (Débito/Crédito): {valor_debito_credito}")
@@ -299,9 +304,9 @@ for index, botao in enumerate(botoes_ver):
                             print(f"Sinistro encontrado: {sinistro_obj.si_codigo}")
                         else:
                             print(f"Sinistro com o código '{sinistro_codigo}' não encontrado no banco de dados.")
+                            continue
                     else:
                         print(f"Não foi possível extrair o código do sinistro de '{sinistro}'.")
-                        continue
 
             except Exception as e:
                 print(f"Erro ao consultar o banco de dados: {e}")
@@ -352,7 +357,7 @@ for index, botao in enumerate(botoes_ver):
                     imagens.append((href, novo_nome))  # Armazena o link completo e o novo nome
                     nomes_imagens.append(caminho_completo)  # Salva o caminho completo no banco de dados
                     
-                       # Processa as imagens e salva os dados no banco de dados
+            # Processa as imagens e salva os dados no banco de dados
             if cliente or sinistro_codigo:
                 process_images_and_save(
                     session=session,
