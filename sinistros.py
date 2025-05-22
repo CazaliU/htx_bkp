@@ -23,7 +23,7 @@ import os
 
 remote_folder = "/var/www/imagens_sinistros/"
 
-def process_images_and_save(session, cliente_id, veiculo_1, veiculo_2, veiculo_3, estado, cidade, tipo, codigo, responsabilidade, descricao_privada, descricao_publica, data_ocorrencia, status, image_links, nomes_imagens, comunicante_nome, comunicante_cpf, comunicante_estado, comunicante_cidade, comunicante_contato1, comunicante_contato2, comunicante_status, comunicante_primeiro_contato, comunicante_narrativa, si_andamento_processo_comunicacao_data_hora, si_andamento_processo_comunicacao_obs_, si_andamento_processo_regulacao_data_hora, si_andamento_processo_regulacao_obs, si_andamento_processo_resolucao_data_hora, si_andamento_processo_resolucao_obs, si_andamento_processo_reforma_pagamento_data_hora, si_andamento_processo_reforma_pagamento_obs, si_andamento_processo_conclusao_data_hora, si_andamento_processo_conclusao_obs, si_andamento_processo_rateio):
+def process_images_and_save(session, cliente_id, veiculo_1, veiculo_2, veiculo_3, estado, cidade, tipo, codigo, responsabilidade, descricao_privada, descricao_publica, data_ocorrencia, status, image_links, nomes_imagens, comunicante_nome, comunicante_cpf, comunicante_estado, comunicante_cidade, comunicante_contato1, comunicante_contato2, comunicante_status, comunicante_primeiro_contato, comunicante_narrativa, si_andamento_processo_comunicacao_data_hora, si_andamento_processo_comunicacao_obs_, si_andamento_processo_regulacao_data_hora, si_andamento_processo_regulacao_obs, si_andamento_processo_resolucao_data_hora, si_andamento_processo_resolucao_obs, si_andamento_processo_reforma_pagamento_data_hora, si_andamento_processo_reforma_pagamento_obs, si_andamento_processo_conclusao_data_hora, si_andamento_processo_conclusao_obs, si_andamento_processo_rateio, si_andamento_processo_status):
     local_folder = f"temp_sinistro_{codigo}"
     remote_paths = []
 
@@ -96,7 +96,8 @@ def process_images_and_save(session, cliente_id, veiculo_1, veiculo_2, veiculo_3
             si_andamento_processo_reforma_pagamento_obs=str(si_andamento_processo_reforma_pagamento_obs) if si_andamento_processo_reforma_pagamento_obs else None,
             si_andamento_processo_conclusao_data_hora=str(si_andamento_processo_conclusao_data_hora) if si_andamento_processo_conclusao_data_hora else None,
             si_andamento_processo_conclusao_obs=str(si_andamento_processo_conclusao_obs) if si_andamento_processo_conclusao_obs else None,
-            si_andamento_processo_rateio=str(si_andamento_processo_rateio) if si_andamento_processo_rateio else None
+            si_andamento_processo_rateio=str(si_andamento_processo_rateio) if si_andamento_processo_rateio else None,
+            si_andamento_processo_status=str(si_andamento_processo_status) if si_andamento_processo_status else None
         )
         session.add(novo_sinistro)
         session.commit()
@@ -388,6 +389,7 @@ for index, botao in enumerate(botoes_ver):
             si_andamento_processo_conclusao_data_hora = None
             si_andamento_processo_conclusao_obs = None
             si_andamento_processo_rateio = None
+            si_andamento_processo_status = None
             
 
             tabela = processo_tab.find('table', {'class': 'table_simples'})
@@ -439,7 +441,7 @@ for index, botao in enumerate(botoes_ver):
                         si_andamento_processo_conclusao_data_hora = processo_data_hora
                         si_andamento_processo_conclusao_obs = processo_observacao
                     elif processo_status == "Rateio:":
-                        si_andamento_processo_rateio = "Automático"  # Valor fixo para Rateio
+                        si_andamento_processo_rateio = processo_data_hora
                         si_andamento_processo_status = processo_observacao  # Observação é usada como status do rateio
 
                     print(f"Status: {processo_status}, Data/Hora: {processo_data_hora}, Observação: {processo_observacao}")
@@ -527,7 +529,8 @@ for index, botao in enumerate(botoes_ver):
                     si_andamento_processo_reforma_pagamento_obs=si_andamento_processo_reforma_pagamento_obs,
                     si_andamento_processo_conclusao_data_hora=si_andamento_processo_conclusao_data_hora,
                     si_andamento_processo_conclusao_obs=si_andamento_processo_conclusao_obs,
-                    si_andamento_processo_rateio=si_andamento_processo_rateio              
+                    si_andamento_processo_rateio=si_andamento_processo_rateio,
+                    si_andamento_processo_status=si_andamento_processo_status         
                 )
         else:
             print("Nenhum anexo encontrado.")
