@@ -3,7 +3,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from sql import engine, DadosClientes, Lancamentos, Sinistros
+from sql import engine, DadosClientes, Cobrancas
 from sqlalchemy.orm import sessionmaker, session
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -90,6 +90,27 @@ for index, botao in enumerate(botoes_ver):
         # Analisa o HTML com BeautifulSoup
         soup = BeautifulSoup(html, 'html.parser')
         
+        status_geral = None
+        titulo = None
+        integrante = None
+        id_nosso_numero = None
+        vencimento = None
+        emissao = None
+        vencimento_original = None
+        parcela = None
+        qtd_parcelas = None
+        remessado = None
+        banco = None
+        conta = None
+        status = None
+        protesto_automatico = None
+        dias_protestar = None
+        valor = None
+        referencia = None
+        ultima_consulta = None
+        dados_tabela = []  # Lista para armazenar os dados da tabela expandida
+        dados_historico = []  # Lista para armazenar os dados da tabela de histórico
+        
         # Captura o status geral da cobrança (exemplo: "VENCIDA!")
         status_geral_tag = soup.find('span', class_='label label-danger label-sm')
         status_geral = status_geral_tag.get_text(strip=True) if status_geral_tag else None
@@ -142,6 +163,12 @@ for index, botao in enumerate(botoes_ver):
                     status_tag = eight_columns.find('b', text=re.compile(r'Status:'))
                     status = status_tag.find_next('span').get_text(strip=True) if status_tag else None
                     
+                    protesto_automatico_tag = eight_columns.find('b', text=re.compile(r'Protesto Automático:'))
+                    protesto_automatico = protesto_automatico_tag.next_sibling.strip() if protesto_automatico_tag else None
+
+                    dias_protestar_tag = eight_columns.find('b', text=re.compile(r'Dias p/ Protestar:'))
+                    dias_protestar = dias_protestar_tag.next_sibling.strip() if dias_protestar_tag else None
+
                     # Localiza o botão com a classe 'icon-chevron-down' dentro da seção 'eight columns'
                     chevron_button = eight_columns.find('i', class_='icon icon-chevron-down')
                     if chevron_button:
@@ -205,6 +232,8 @@ for index, botao in enumerate(botoes_ver):
                     print(f"Banco: {banco}")
                     print(f"Conta: {conta}")
                     print(f"Status: {status}")
+                    print(f"Protesto Automático: {protesto_automatico}")
+                    print(f"Dias p/ Protestar: {dias_protestar}")
 
                 except Exception as e:
                     print(f"Erro ao capturar os dados da seção 'eight columns': {e}")
@@ -230,6 +259,123 @@ for index, botao in enumerate(botoes_ver):
                     print(f"Erro ao capturar os dados da seção 'four columns': {e}")
         else:
             print("Seção 'tab dados' não encontrada.")
+            
+        if integrante:    
+          try:
+            Session = sessionmaker(bind=engine)
+            session = Session()
+            
+            # Verifica se o cliente existe
+            cliente = session.query(DadosClientes).filter(DadosClientes.razao_social.ilike(f"%{integrante}%")).first()
+            if cliente:
+                print(f"ID do cliente encontrado: {cliente.id}")
+            else:
+              print(f"Nenhum cliente encontrado para o integrante: {integrante}")
+              pyautogui.click(x=153, y=656)
+              time.sleep(1)
+              continue
+          except Exception as e:
+              print(f"Erro ao buscar o cliente no banco de dados: {e}")
+          finally:
+              session.close()
+      
+        if integrante:
+            # Localiza a aba histórico dentro do modal
+            aba_historico = driver.find_element(By.CSS_SELECTOR, 'li[data-id="historico"]')
+            aba_historico.click()
+            time.sleep(2)  # Aguarde o carregamento da aba
+
+            # Extrai o HTML da página
+            html = driver.page_source
+            # Analisa o HTML com BeautifulSoup
+            soup = BeautifulSoup(html, 'html.parser')
+
+            # Localiza a seção 'tab historico'
+            tab_historico = soup.find('div', class_='tab historico')
+            if tab_historico:
+                try:
+                    print("\nDados capturados da aba histórico:")
+                    # Captura a última consulta
+                    ultima_consulta_tag = tab_historico.find('b', text=re.compile(r'Última Consulta:'))
+                    ultima_consulta = ultima_consulta_tag.next_sibling.strip() if ultima_consulta_tag else None
+                    print(f"Última Consulta: {ultima_consulta}")
+
+                    # Localiza a tabela de histórico de interações
+                    tabela_historico = tab_historico.find('table', class_='table_simples')
+                    if tabela_historico:
+                        try:
+                            # Captura o cabeçalho da tabela
+                            cabecalhos = [th.get_text(strip=True) for th in tabela_historico.find_all('th')]
+                            print(f"Cabeçalhos da tabela: {cabecalhos}")
+
+                            # Captura as linhas da tabela
+                            linhas = tabela_historico.find_all('tr')
+                            dados_historico = []
+
+                            for linha in linhas:
+                                colunas = linha.find_all('td')
+                                if colunas:
+                                    # Captura os dados de cada coluna
+                                    dados_linha = [coluna.get_text(strip=True) for coluna in colunas]
+                                    dados_historico.append(dados_linha)
+
+                            # Exibe os dados capturados
+                            print("\nDados capturados da tabela de histórico:")
+                            for linha in dados_historico:
+                                print(linha)
+
+                        except Exception as e:
+                            print(f"Erro ao capturar os dados da tabela de histórico: {e}")
+                    else:
+                        print("Tabela de histórico não encontrada na aba histórico.")
+
+                except Exception as e:
+                    print(f"Erro ao capturar os dados da aba histórico: {e}")
+            else:
+                print("Aba histórico não encontrada.")
+                
+        if id_nosso_numero:  # Verifica se o id_nosso_numero foi capturado
+            try:
+                Session = sessionmaker(bind=engine)
+                session = Session()
+
+                # Verifica se o id_nosso_numero já existe na tabela 'cobrancas'
+                cobranca_existente = session.query(Cobrancas).filter(Cobrancas.co_id_nosso_numero == id_nosso_numero).first()
+                if cobranca_existente:
+                    print(f"O ID/Nosso Número '{id_nosso_numero}' já existe na tabela 'cobrancas'. Ignorando inserção.")
+                else:
+                    # Insere os dados na tabela 'cobrancas'
+                    nova_cobranca = Cobrancas(
+                      co_status_geral=str(status_geral) if status_geral else None,
+                      co_titulo=str(titulo) if titulo else None,
+                      co_integrante=str(integrante) if integrante else None,
+                      co_id_nosso_numero=str(id_nosso_numero) if id_nosso_numero else None,
+                      co_vencimento=str(vencimento) if vencimento else None,
+                      co_emissao=str(emissao) if emissao else None,
+                      co_vencimento_original=str(vencimento_original) if vencimento_original else None,
+                      co_parcela=str(parcela) if parcela else None,
+                      co_qtd_parcelas=str(qtd_parcelas) if qtd_parcelas else None,
+                      co_protesto_automatico=str(protesto_automatico) if protesto_automatico else None,
+                      co_dias_protestar=str(dias_protestar) if dias_protestar else None,
+                      co_banco=str(banco) if banco else None,
+                      co_conta=str(conta) if conta else None,
+                      co_remessado=str(remessado) if remessado else None,
+                      co_status=str(status) if status else None,
+                      co_valor=str(valor) if valor else None,
+                      co_referencia=str(referencia) if referencia else None,
+                      co_dados_complementares=dados_tabela if dados_tabela else None,  # Lista ou None
+                      co_historico_ultima_consulta=str(ultima_consulta) if ultima_consulta else None,
+                      co_historico=dados_historico if dados_historico else None,  # Lista ou None
+                      co_cliente_id=cliente.id if cliente else None,
+                    )
+                    session.add(nova_cobranca)
+                    session.commit()
+                    print(f"Nova cobrança com ID/Nosso Número '{id_nosso_numero}' inserida com sucesso.")
+
+            except Exception as e:
+                print(f"Erro ao verificar/inserir cobrança: {e}")
+            finally:
+                session.close()
         
         # fecha modal
         pyautogui.click(x=153, y=656)

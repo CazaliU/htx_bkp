@@ -244,3 +244,31 @@ class Lancamentos(Base):
     la_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
     la_cliente_id = Column(Integer, ForeignKey('clientes.cl_id', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'clientes'
     la_sinistro_codigo = Column(Integer, ForeignKey('sinistros.si_codigo', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'sinistros'
+
+
+# Define a tabela 'cobrancas'
+class Cobrancas(Base):
+    __tablename__ = 'cobrancas'
+
+    co_id = Column(Integer, primary_key=True, autoincrement=True)  # Identificador único
+    co_status_geral = Column(String(50), nullable=True)  # Status geral da cobrança
+    co_titulo = Column(String(255), nullable=True)  # Título da cobrança
+    co_integrante = Column(String(255), nullable=False)  # Integrante (obrigatório)
+    co_id_nosso_numero = Column(String(50), nullable=True, unique=True)  # ID/Nosso Número
+    co_vencimento = Column(String, nullable=True)  # Data de vencimento
+    co_emissao = Column(String, nullable=True)  # Data de emissão
+    co_vencimento_original = Column(String, nullable=True)  # Data de vencimento original
+    co_parcela = Column(String(50), nullable=True)  # Número da parcela
+    co_qtd_parcelas = Column(String(50), nullable=True)  # Quantidade de parcelas
+    co_protesto_automatico = Column(String(50), nullable=True)  # Protesto automático
+    co_dias_protestar = Column(String(50), nullable=True)  # Dias para protestar
+    co_banco = Column(String(255), nullable=True)  # Banco associado
+    co_conta = Column(String(255), nullable=True)  # Conta associada
+    co_remessado = Column(String(50), nullable=True)  # Remessado
+    co_status = Column(String(50), nullable=True)  # Status da cobrança
+    co_valor = Column(String, nullable=True)  # Valor da cobrança
+    co_referencia = Column(String, nullable=True)  # Referência da cobrança
+    co_dados_complementares = Column(JSON, nullable=True)  # Dados complementares (armazenados como JSON)
+    co_historico_ultima_consulta = Column(String, nullable=True)  # Última consulta no histórico
+    co_historico = Column(JSON, nullable=True)  # Histórico de interações (armazenado como JSON)
+    co_cliente_id = Column(Integer, ForeignKey('clientes.cl_id', ondelete='RESTRICT'), nullable=False)  # Chave estrangeira para clientes
