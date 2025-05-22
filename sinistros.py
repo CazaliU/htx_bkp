@@ -207,7 +207,7 @@ for index, botao in enumerate(botoes_ver):
             descricao_privada = None
             descricao_publica = None
             data_ocorrencia = None
-            status = None
+            si_status = None
 
             campos = [
                 "Veículos:",
@@ -248,8 +248,10 @@ for index, botao in enumerate(botoes_ver):
                         data_ocorrencia = b_tag.next_sibling.strip() if b_tag.next_sibling else None
                         print(f"{campo} {data_ocorrencia}")
                     elif campo == "Status:":
-                        status = b_tag.next_sibling.strip() if b_tag.next_sibling else None
-                        print(f"{campo} {status}")
+                        # Busca o próximo elemento <div> com a classe 'label'
+                        label = b_tag.find_next('div', class_='label')
+                        si_status = label.get_text(strip=True) if label else None
+                        print(f"{campo} {si_status}")
                     elif campo == "Estado:":
                         estado = b_tag.next_sibling.strip() if b_tag.next_sibling else None
                         print(f"{campo} {estado}")
@@ -386,6 +388,7 @@ for index, botao in enumerate(botoes_ver):
             si_andamento_processo_conclusao_data_hora = None
             si_andamento_processo_conclusao_obs = None
             si_andamento_processo_rateio = None
+            
 
             tabela = processo_tab.find('table', {'class': 'table_simples'})
             if tabela:
@@ -502,7 +505,7 @@ for index, botao in enumerate(botoes_ver):
                     descricao_privada=descricao_privada,
                     descricao_publica=descricao_publica,
                     data_ocorrencia=data_ocorrencia,
-                    status=status,
+                    status=si_status,
                     image_links=imagens,
                     nomes_imagens=nomes_imagens,
                     comunicante_nome=comunicante_nome,
