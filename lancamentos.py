@@ -185,6 +185,7 @@ for index, botao in enumerate(botoes_ver):
         veiculo = None
         valor = None
         referencia = None
+        cliente = None
 
         # Localiza a seção 'tab dados'
         tab_dados = soup.find('div', class_='tab dados')
@@ -361,7 +362,7 @@ for index, botao in enumerate(botoes_ver):
             if cliente or sinistro_codigo:
                 process_images_and_save(
                     session=session,
-                    cliente_id=cliente.id,
+                    cliente_id=cliente.id if cliente else None,
                     sinistro_codigo=sinistro_codigo,
                     veiculo=veiculo,
                     integrante=integrante,
