@@ -139,7 +139,7 @@ time.sleep(3)  # Pode ser necessário ajustar o tempo
 # Navega para a página onde está o status
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  
 
-time.sleep(10)
+time.sleep(20)
 
 # Espera até que o modal esteja visível
 modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
