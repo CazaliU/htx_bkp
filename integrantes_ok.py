@@ -119,101 +119,135 @@ for i in range(0, num_insertes + 1):
     print(f"Inclusão: {inclusao}")
     print(f"{tipo_vigencia_ou_exclusao}: {vigencia_ou_exclusao}")
 
-    # Captura múltiplos elementos de endereço
-    logradouro_elements = soup.find_all('div', class_='six columns fv')
+    # Localiza o contêiner principal da aba "dados"
+    dados_container = soup.find('div', class_='tab dados', style='display:block;')
 
-    # Inicializa variáveis para armazenar os valores
-    logradouros = []
-    numeros = []
-    bairros = []
-    ceps = []
-    complementos = []
-    referencias = []
-    estados = []
-    cidades = []
+    if dados_container:
+        # Captura múltiplos elementos de endereço dentro da aba "dados"
+        logradouro_elements = dados_container.find_all('div', class_='six columns fv')
 
-    # Itera sobre os elementos e armazena os valores nas listas
-    for element in logradouro_elements:
-        label = element.find('b').get_text(strip=True)
-        value = element.get_text(strip=True).replace(label, '').strip()
-        
-        if 'Logradouro' in label:
-            logradouros.append(value)
-        elif 'Número' in label:
-            numeros.append(value)
-        elif 'Bairro' in label:
-            bairros.append(value)
-        elif 'CEP' in label:
-            ceps.append(value)
-        elif 'Complemento' in label:
-            complementos.append(value)
-        elif 'Referência' in label:
-            referencias.append(value)
-        elif 'Estado:' in label:
-            estados.append(value)
-        elif 'Cidade' in label:
-            cidades.append(value)
+        # Inicializa variáveis para armazenar os valores
+        logradouros = []
+        numeros = []
+        bairros = []
+        ceps = []
+        complementos = []
+        referencias = []
+        estados = []
+        cidades = []
 
-    # Captura a Razão Social, CNPJ, Nome, Nacionalidade, Estado Civil, Profissão, RG, Orgão Exp, CPF e Nascimento
-    elementos = soup.find_all('div', class_='six columns fv')
-    razao_social = None
-    cnpj = None
-    nome = None
-    nacionalidade = None
-    estado_civil = None
-    profissao = None
-    rg = None
-    orgao_exp = None
-    cpf = None
-    nascimento = None
-    celular_preferencial = None
-    celular_complementar = None
-    telefone = None
-    email = None
-    vigencia_contrato = None
-    metodo_cobranca = None
-    indice_participacao = None
-    integracao_trackbrasil = None
-    estado_grupo = 'Grande Teste'
-    
-    for elemento in elementos:
-        texto = elemento.text.strip()
-        if texto.startswith("Razão Social:"):
-            razao_social = texto.replace("Razão Social:", "").strip()
-        elif texto.startswith("CNPJ:"):
-            cnpj = texto.replace("CNPJ:", "").strip()
-        elif texto.startswith("Nome:"):
-            nome = texto.replace("Nome:", "").strip()
-        elif texto.startswith("Nacionalidade:"):
-            nacionalidade = texto.replace("Nacionalidade:", "").strip()
-        elif texto.startswith("Estado Civil:"):
-            estado_civil = texto.replace("Estado Civil:", "").strip()
-        elif texto.startswith("Profissão:"):
-            profissao = texto.replace("Profissão:", "").strip()
-        elif texto.startswith("RG:"):
-            rg = texto.replace("RG:", "").strip()
-        elif texto.startswith("Orgão Exp:"):
-            orgao_exp = texto.replace("Orgão Exp:", "").strip()
-        elif texto.startswith("CPF:"):
-            cpf = texto.replace("CPF:", "").strip()
-        elif texto.startswith("Nascimento:"):
-            nascimento = texto.replace("Nascimento:", "").strip()
-        elif texto.startswith("Celular Preferencial:"):
-            celular_preferencial = texto.replace("Celular Preferencial:", "").strip()
-        elif texto.startswith("Celular Complementar:"):
-            celular_complementar = texto.replace("Celular Complementar:", "").strip()
-        elif texto.startswith("Telefone:"):
-            telefone = texto.replace("Telefone:", "").strip()
-        elif texto.startswith("E-mail:"):
-            email = texto.replace("E-mail:", "").strip()
-        elif texto.startswith("Vigência do Contrato:"):
-            vigencia_contrato = texto.replace("Vigência do Contrato:", "").strip()
-        elif texto.startswith("Método de Cobrança:"):
-            metodo_cobranca = texto.replace("Método de Cobrança:", "").strip()
-        elif texto.startswith("Índice de Participação Padrão:"):
-            indice_participacao = texto.replace("Índice de Participação Padrão:", "").strip()
-        elif texto.startswith("Integração TrackBrasil:"):
-            integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
+        # Itera sobre os elementos e armazena os valores nas listas
+        for element in logradouro_elements:
+            label = element.find('b').get_text(strip=True)
+            value = element.get_text(strip=True).replace(label, '').strip()
+
+            if 'Logradouro' in label:
+                logradouros.append(value)
+            elif 'Número' in label:
+                numeros.append(value)
+            elif 'Bairro' in label:
+                bairros.append(value)
+            elif 'CEP' in label:
+                ceps.append(value)
+            elif 'Complemento' in label:
+                complementos.append(value)
+            elif 'Referência' in label:
+                referencias.append(value)
+            elif 'Estado:' in label:
+                estados.append(value)
+            elif 'Cidade' in label:
+                cidades.append(value)
+
+        # Captura os outros campos dentro da aba "dados"
+        elementos = dados_container.find_all('div', class_='six columns fv')
+        razao_social = None
+        cnpj = None
+        nome = None
+        nacionalidade = None
+        estado_civil = None
+        profissao = None
+        rg = None
+        orgao_exp = None
+        cpf = None
+        nascimento = None
+        celular_preferencial = None
+        celular_complementar = None
+        telefone = None
+        email = None
+        vigencia_contrato = None
+        metodo_cobranca = None
+        indice_participacao = None
+        integracao_trackbrasil = None
+        estado_grupo = 'Grande Teste'
+
+        for elemento in elementos:
+            texto = elemento.text.strip()
+            if texto.startswith("Razão Social:"):
+                razao_social = texto.replace("Razão Social:", "").strip()
+            elif texto.startswith("CNPJ:"):
+                cnpj = texto.replace("CNPJ:", "").strip()
+            elif texto.startswith("Nome:"):
+                nome = texto.replace("Nome:", "").strip()
+            elif texto.startswith("Nacionalidade:"):
+                nacionalidade = texto.replace("Nacionalidade:", "").strip()
+            elif texto.startswith("Estado Civil:"):
+                estado_civil = texto.replace("Estado Civil:", "").strip()
+            elif texto.startswith("Profissão:"):
+                profissao = texto.replace("Profissão:", "").strip()
+            elif texto.startswith("RG:"):
+                rg = texto.replace("RG:", "").strip()
+            elif texto.startswith("Orgão Exp:"):
+                orgao_exp = texto.replace("Orgão Exp:", "").strip()
+            elif texto.startswith("CPF:"):
+                cpf = texto.replace("CPF:", "").strip()
+            elif texto.startswith("Nascimento:"):
+                nascimento = texto.replace("Nascimento:", "").strip()
+            elif texto.startswith("Celular Preferencial:"):
+                celular_preferencial = texto.replace("Celular Preferencial:", "").strip()
+            elif texto.startswith("Celular Complementar:"):
+                celular_complementar = texto.replace("Celular Complementar:", "").strip()
+            elif texto.startswith("Telefone:"):
+                telefone = texto.replace("Telefone:", "").strip()
+            elif texto.startswith("E-mail:"):
+                email = texto.replace("E-mail:", "").strip()
+            elif texto.startswith("Vigência do Contrato:"):
+                vigencia_contrato = texto.replace("Vigência do Contrato:", "").strip()
+            elif texto.startswith("Método de Cobrança:"):
+                metodo_cobranca = texto.replace("Método de Cobrança:", "").strip()
+            elif texto.startswith("Índice de Participação Padrão:"):
+                indice_participacao = texto.replace("Índice de Participação Padrão:", "").strip()
+            elif texto.startswith("Integração TrackBrasil:"):
+                integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
+
+        # Exibe os valores capturados
+        print(f"Razão Social: {razao_social}")
+        print(f"CNPJ: {cnpj}")
+        print(f"Nome: {nome}")
+        print(f"Nacionalidade: {nacionalidade}")
+        print(f"Estado Civil: {estado_civil}")
+        print(f"Profissão: {profissao}")
+        print(f"RG: {rg}")
+        print(f"Orgão Exp: {orgao_exp}")
+        print(f"CPF: {cpf}")
+        print(f"Nascimento: {nascimento}")
+        print(f"Celular Preferencial: {celular_preferencial}")
+        print(f"Celular Complementar: {celular_complementar}")
+        print(f"Telefone: {telefone}")
+        print(f"E-mail: {email}")
+        print(f"Vigência do Contrato: {vigencia_contrato}")
+        print(f"Método de Cobrança: {metodo_cobranca}")
+        print(f"Índice de Participação Padrão: {indice_participacao}")
+        print(f"Integração TrackBrasil: {integracao_trackbrasil}")
+        print(f"Logradouros: {logradouros}")
+        print(f"Números: {numeros}")
+        print(f"Bairros: {bairros}")
+        print(f"CEPs: {ceps}")
+        print(f"Complementos: {complementos}")
+        print(f"Referências: {referencias}")
+        print(f"Estados: {estados}")
+        print(f"Cidades: {cidades}")
+    else:
+        print("Contêiner 'dados' não encontrado.")
 
 
     # Criar sessão
