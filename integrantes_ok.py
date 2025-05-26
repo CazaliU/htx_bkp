@@ -354,6 +354,7 @@ while True:
             print("Botão 'Próxima' está desabilitado. Fim da navegação.")
             break  # Sai do loop se não houver mais páginas
         
+        time.sleep(2)
         # Clica no botão "Próxima" para ir para a próxima página
         driver.execute_script("arguments[0].scrollIntoView();", botao_proxima)
         time.sleep(1)
