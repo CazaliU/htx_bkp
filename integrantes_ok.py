@@ -27,7 +27,7 @@ x1, y1 = 46, 540
 num_insertes = 5000
 
 # Configura o caminho para o ChromeDriver
-chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver-win64\chromedriver.exe'  # Caminho atualizado
+chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver.exe'
 
 # Verifica se o arquivo chromedriver.exe existe
 if not os.path.isfile(chrome_driver_path):
