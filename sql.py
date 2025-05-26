@@ -180,6 +180,8 @@ class VistoriaImagens(Base):
     vi_nome = Column(String(255), nullable=True)  # Nome associado à vistoria
     vi_telefone = Column(String(20), nullable=True)  # Telefone associado à vistoria
     vi_caminho = Column(JSON, nullable=False)  # Caminhos das imagens (armazenados como JSON ou string delimitada)
+    vi_latitude = Column(String(20), nullable=True)  # Latitude da localização da vistoria
+    vi_longitude = Column(String(20), nullable=True)  # Longitude da localização da vistoria
 
 
 

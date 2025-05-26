@@ -55,7 +55,7 @@ def upload_image_to_server(url, remote_folder, identificador):
         return None
 
 # Função para salvar os caminhos no banco de dados
-def save_to_database(session, veiculo_id, numero, status, data_hora, nome, telefone, remote_paths):
+def save_to_database(session, veiculo_id, numero, status, data_hora, nome, telefone, remote_paths, latitude, longitude):
     try:
         print(f"Remote paths antes da conversão: {remote_paths}")
 
@@ -65,6 +65,8 @@ def save_to_database(session, veiculo_id, numero, status, data_hora, nome, telef
         data_hora = data_hora if data_hora.strip() else None
         nome = nome if nome.strip() else None
         telefone = telefone if telefone.strip() else None
+        latitude = latitude if latitude.strip() else None
+        longitude = longitude if longitude.strip() else None
 
         # Cria um único registro para a vistoria
         nova_vistoria = VistoriaImagens(
@@ -74,7 +76,9 @@ def save_to_database(session, veiculo_id, numero, status, data_hora, nome, telef
             vi_data_hora=data_hora,  # Substitui string vazia por None
             vi_nome=nome,  # Substitui string vazia por None
             vi_telefone=telefone,  # Substitui string vazia por None
-            vi_caminho=remote_paths  # Passa a lista diretamente
+            vi_caminho=remote_paths,  # Passa a lista diretamente
+            vi_latitude=latitude,  # Substitui string vazia por None
+            vi_longitude=longitude  # Substitui string vazia por None
         )
         session.add(nova_vistoria)
         session.commit()
@@ -84,7 +88,7 @@ def save_to_database(session, veiculo_id, numero, status, data_hora, nome, telef
         session.rollback()
 
 # Processa as imagens encontradas
-def process_images(session, veiculo_id, numero, status, data_hora, nome, telefone, image_links):
+def process_images(session, veiculo_id, numero, status, data_hora, nome, telefone, image_links, latitude, longitude):
     local_folder = f"temp_vistoria_{numero}"  # Pasta temporária para armazenar as imagens
     remote_paths = []
 
@@ -125,7 +129,7 @@ def process_images(session, veiculo_id, numero, status, data_hora, nome, telefon
 
         # Salva os caminhos no banco de dados
         if remote_paths:
-            save_to_database(session, veiculo_id, numero, status, data_hora, nome, telefone, remote_paths)
+            save_to_database(session, veiculo_id, numero, status, data_hora, nome, telefone, remote_paths, latitude, longitude)
 
     except Exception as e:
         print(f"Erro ao processar as imagens: {e}")
@@ -286,7 +290,7 @@ for index, botao in enumerate(botoes_ver):
                                 
                                 # Captura o conteúdo da div 'caption' dentro do contêiner da vistoria
                                 caption_div = vistoria_container.find_element(By.CSS_SELECTOR, 'div.caption')
-                                numero, data_hora, nome, telefone, status = None, None, None, None, None
+                                numero, data_hora, nome, telefone, status, coordenadas, latitude, longitude = None, None, None, None, None, None, None, None
 
                                 if caption_div:
                                     caption_text = caption_div.text.strip()
@@ -303,8 +307,33 @@ for index, botao in enumerate(botoes_ver):
                                     status = status_span.text.strip()  # Extrai o texto do status
                                 except Exception as e:
                                     print(f"Erro ao capturar o status da vistoria {numero}: {e}")
+                                    
+                                try:
+                                    # Localiza o iframe dentro do contêiner da vistoria
+                                    iframe = vistoria_container.find_element(By.CSS_SELECTOR, 'iframe')
 
-                                print(f"Vistoria número: {numero}, Data/Hora: {data_hora}, Nome: {nome}, Telefone: {telefone}, Status: {status}")
+                                    # Captura a URL do iframe diretamente do atributo 'src'
+                                    iframe_url = iframe.get_attribute('src')
+                                    print(f"URL do iframe: {iframe_url}")
+
+                                    # Extrai as coordenadas da URL do iframe
+                                    if "q=" in iframe_url:
+                                        coordenadas = iframe_url.split("q=")[1].split("&")[0]
+                                        print(f"Coordenadas extraídas: {coordenadas}")
+                                        
+                                        # Separa em latitude e longitude
+                                        latitude, longitude = coordenadas.split(',')
+                                        print(f"Latitude: {latitude}, Longitude: {longitude}")
+                                    else:
+                                        print("Coordenadas não encontradas na URL do iframe.")
+
+                                except Exception as e:
+                                    print(f"Erro ao capturar coordenadas do iframe: {e}")
+
+                                except Exception as e:
+                                    print(f"Erro ao capturar coordenadas do iframe: {e}")
+
+                                print(f"Vistoria número: {numero}, Data/Hora: {data_hora}, Nome: {nome}, Telefone: {telefone}, Status: {status}, Coordenadas: {coordenadas}")
 
                                 # Captura os links das imagens dentro do contêiner da vistoria expandida
                                 links = vistoria_container.find_elements(By.CSS_SELECTOR, 'a.abrir_anexo')
@@ -320,7 +349,9 @@ for index, botao in enumerate(botoes_ver):
                                     data_hora=data_hora,
                                     nome=nome,
                                     telefone=telefone,
-                                    image_links=imagens
+                                    image_links=imagens,
+                                    latitude=latitude,
+                                    longitude=longitude
                                 )
                                 
                                 # Localiza o botão de "fechar" (pode ser o mesmo botão com estado alterado)
