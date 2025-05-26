@@ -4,7 +4,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
-from sql import engine, DadosIntegrantes
+from sql import engine, DadosClientes
 from sqlalchemy.orm import sessionmaker
 from selenium import webdriver
 from dotenv import load_dotenv
@@ -149,7 +149,7 @@ for i in range(0, num_insertes + 1):
             complementos.append(value)
         elif 'Referência' in label:
             referencias.append(value)
-        elif 'Estado' in label:
+        elif 'Estado:' in label:
             estados.append(value)
         elif 'Cidade' in label:
             cidades.append(value)
@@ -174,7 +174,7 @@ for i in range(0, num_insertes + 1):
     metodo_cobranca = None
     indice_participacao = None
     integracao_trackbrasil = None
-    estado_grupo = 'Grande SC'
+    estado_grupo = 'Grande Teste'
     
     for elemento in elementos:
         texto = elemento.text.strip()
@@ -221,7 +221,7 @@ for i in range(0, num_insertes + 1):
     session = Session()
 
     # Verificar se o cliente já está cadastrado
-    cliente_existente = session.query(DadosIntegrantes).filter_by(cnpj=cnpj, estado_grupo=estado_grupo, cpf=cpf).first()
+    cliente_existente = session.query(DadosClientes).filter_by(cl_cnpj=cnpj, cl_estado_grupo=estado_grupo, cl_cpf=cpf).first()
     if cliente_existente:
         print(f"Cliente com CNPJ {cnpj}, estado Grupo {estado_grupo} e cpf {cpf} já está cadastrado. Pulando para o próximo.")
         # FECHA
@@ -251,46 +251,46 @@ for i in range(0, num_insertes + 1):
         estado2 = estados[i+1] if i+1 < len(estados) else None
         cidade2 = cidades[i+1] if i+1 < len(cidades) else None
 
-        novo_dado = DadosIntegrantes(
-            status=status,
-            inclusao=inclusao,
-            vigencia=vigencia,
-            exclusao=exclusao,
-            razao_social=razao_social,
-            cnpj=cnpj,
-            nome=nome,
-            nacionalidade=nacionalidade,
-            estado_civil=estado_civil,
-            profissao=profissao,
-            rg=rg,
-            orgao_exp=orgao_exp,
-            cpf=cpf,
-            nascimento=nascimento,
-            logradouro1=logradouro1,
-            numero1=numero1,
-            bairro1=bairro1,
-            cep1=cep1,
-            complemento1=complemento1,
-            referencia1=referencia1,
-            estado1=estado1,
-            cidade1=cidade1,
-            logradouro2=logradouro2,
-            numero2=numero2,
-            bairro2=bairro2,
-            cep2=cep2,
-            complemento2=complemento2,
-            referencia2=referencia2,
-            estado2=estado2,
-            cidade2=cidade2,
-            celular_preferencial=celular_preferencial,
-            celular_complementar=celular_complementar,
-            telefone=telefone,
-            email=email,
-            vigencia_contrato=vigencia_contrato,
-            metodo_cobranca=metodo_cobranca,
-            indice_participacao=indice_participacao,
-            integracao_trackbrasil=integracao_trackbrasil,
-            estado_grupo=estado_grupo
+        novo_dado = DadosClientes(
+            cl_status=status,
+            cl_data_inclusao=inclusao,
+            cl_data_vigencia=vigencia,
+            cl_data_exclusao=exclusao,
+            cl_razao_social=razao_social,
+            cl_cnpj=cnpj,
+            cl_nome=nome,
+            cl_nacionalidade=nacionalidade,
+            cl_estado_civil=estado_civil,
+            cl_profissao=profissao,
+            cl_rg=rg,
+            cl_orgao_exp=orgao_exp,
+            cl_cpf=cpf,
+            cl_nascimento=nascimento,
+            cl_logradouro=logradouro1,
+            cl_numero=numero1,
+            cl_bairro=bairro1,
+            cl_cep=cep1,
+            cl_complemento=complemento1,
+            cl_referencia=referencia1,
+            cl_estado=estado1,
+            cl_cidade=cidade1,
+            cl_adm_logradouro=logradouro2,
+            cl_adm_numero=numero2,
+            cl_adm_bairro=bairro2,
+            cl_adm_cep=cep2,
+            cl_adm_complemento=complemento2,
+            cl_adm_referencia=referencia2,
+            cl_adm_estado=estado2,
+            cl_adm_cidade=cidade2,
+            cl_celular_preferencial=celular_preferencial,
+            cl_celular_complementar=celular_complementar,
+            cl_telefone=telefone,
+            cl_email=email,
+            cl_vigencia_contrato=vigencia_contrato,
+            cl_metodo_cobranca=metodo_cobranca,
+            cl_indice_participacao=indice_participacao,
+            cl_integracao_trackbrasil=integracao_trackbrasil,
+            cl_estado_grupo=estado_grupo
         )
 
         try: 
