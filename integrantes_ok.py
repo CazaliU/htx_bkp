@@ -21,12 +21,6 @@ load_dotenv()
 username = os.getenv('APP_USERNAME')
 password = os.getenv('APP_PASSWORD')
 
-# BOTAO VER INICIAL
-x1, y1 = 46, 540
-
-# NUMERO DE INTEGRANTES
-num_insertes = 5000
-
 # Configura o caminho para o ChromeDriver
 chrome_driver_path = r'C:\Users\rafae\Downloads\chromedriver-win64\chromedriver.exe'
 
