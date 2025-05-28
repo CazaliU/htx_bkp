@@ -174,7 +174,7 @@ while True:
                     metodo_cobranca = None
                     indice_participacao = None
                     integracao_trackbrasil = None
-                    estado_grupo = 'Grande Teste'
+                    estado_grupo = 'Grande SC'
 
                     for elemento in elementos:
                         texto = elemento.text.strip()
@@ -251,10 +251,10 @@ while True:
                 session = Session()
 
                 # Verificar se o cliente já está cadastrado
-                cliente_existente = session.query(DadosClientes).filter_by(cl_cnpj=cnpj, cl_estado_grupo=estado_grupo, cl_cpf=cpf).first()
+                cliente_existente = session.query(DadosClientes).filter_by(cl_cnpj=cnpj, cl_estado_grupo=estado_grupo, cl_cpf=cpf, cl_status=status).first()
                 try:
                     if cliente_existente:
-                        print(f"Cliente com CNPJ {cnpj}, estado Grupo {estado_grupo} e cpf {cpf} já está cadastrado. Pulando para o próximo.")
+                        print(f"Cliente com CNPJ {cnpj}, estado Grupo {estado_grupo} e cpf {cpf} e status {status} já está cadastrado já está cadastrado. Pulando para o próximo.")
                         continue
                 except Exception as e:
                     print(f"Erro ao consultar o cliente no banco de dados: {e}")

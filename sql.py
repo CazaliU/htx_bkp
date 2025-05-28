@@ -16,7 +16,7 @@ Base = declarative_base()
 
 # Definir o modelo de classe
 class DadosClientes(Base):
-    __tablename__ = 'clientes'
+    __tablename__ = 'clientes_1'
     cl_id = Column('cl_id', Integer, primary_key=True, autoincrement=True)  # Alinha com a coluna cl_id no banco
     cl_status = Column('cl_status', String, nullable=True)
     cl_data_inclusao = Column('cl_data_inclusao', String, nullable=True)
@@ -60,7 +60,7 @@ class DadosClientes(Base):
     cl_criado_em = Column('cl_criado_em', String, default="now()", nullable=True)
 
     __table_args__ = (
-        UniqueConstraint('cl_cnpj', 'cl_cpf', 'cl_estado_grupo', name='uq_cnpj_cpf_estado_grupo'),  # Define a restrição de unicidade composta
+        UniqueConstraint('cl_cnpj', 'cl_cpf', 'cl_estado_grupo', name='uq_cliente_1_cnpj_cpf_estado'),  # Define a restrição de unicidade composta
     )
 
 
