@@ -4,9 +4,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from sqlalchemy.orm import sessionmaker, session
+from sql import engine, Veiculos, DadosClientes
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
-from sql import engine, Veiculos
+from sqlalchemy import or_
 from dotenv import load_dotenv
 from selenium import webdriver
 from bs4 import BeautifulSoup
@@ -62,6 +63,7 @@ while True:
         
         for index_principal, botao_principal in enumerate(botoes_principais):
             try:
+                cliente_encontrado = True
                 print(f"Acessando botão principal {index_principal + 1} de {len(botoes_principais)}")
                 
                 # Scroll até o botão principal para garantir que ele esteja visível
@@ -269,9 +271,38 @@ while True:
                             time.sleep(1)
                             continue
                         
+                        #pegar razao socail ou nome cpf
+                        if integrante:
+                            try:
+                                Session = sessionmaker(bind=engine)
+                                session = Session()
+
+                                # Verifica se o integrante já existe no campo 'cl_razao_social' ou 'cl_nome'
+                                cliente = session.query(DadosClientes).filter(
+                                    or_(
+                                        DadosClientes.cl_razao_social.ilike(f"%{integrante}%"),
+                                        DadosClientes.cl_nome.ilike(f"%{integrante}%")
+                                    )
+                                ).first()
+
+                                if cliente:
+                                    print(f"ID do cliente encontrado: {cliente.cl_id}")
+                                else:
+                                    print(f"Cliente com o nome ou razão social '{integrante}' não encontrado.")
+                                    cliente_encontrado = False
+                                    # Fecha o modal interno
+                                    pyautogui.click(x=153, y=656)
+                                    time.sleep(1)
+                                    break
+
+                            except Exception as e:
+                                print(f"Erro ao buscar cliente: {e}")
+                            finally:
+                                session.close()
                         
                         # Cria uma instância da classe Veiculos
                         veiculo = Veiculos(
+                            veiculos_cl_id=cliente.cl_id if cliente else None,
                             ve_status=empty_to_none(status),
                             ve_inclusao=empty_to_none(inclusao),
                             ve_exclusao=empty_to_none(exclusao),
@@ -362,7 +393,7 @@ while True:
                             ve_ultima_vistoria=empty_to_none(dados_veiculo["Última Vistoria"][0] if dados_veiculo["Última Vistoria"] else None),
                             ve_monitoramento=empty_to_none(dados_veiculo["monitoramento"][0] if dados_veiculo["monitoramento"] else None),
                             ve_anotacoes_controle=empty_to_none(dados_veiculo["Anotações de Controle:"][0] if dados_veiculo["Anotações de Controle:"] else None),
-                            ve_estado_grupo=empty_to_none(estado_grupo),
+                            ve_estado_grupo=empty_to_none(estado_grupo)
                         )
 
                         # Adiciona a instância à sessão e tenta salvar no banco de dados
@@ -387,6 +418,13 @@ while True:
                         pyautogui.click(x=153, y=656)
                         time.sleep(1)
                         continue
+                
+                # Verifica se o cliente foi encontrado
+                if not cliente_encontrado:
+                    print("Nenhum cliente encontrado. Indo para o próximo botão principal.")
+                    pyautogui.click(x=153, y=656)
+                    time.sleep(1)
+                    continue  # Vai para o próximo botão principal
                     
                 # Fecha o modal principal
                 pyautogui.click(x=153, y=656)
