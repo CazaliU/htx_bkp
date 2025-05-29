@@ -66,7 +66,7 @@ class DadosClientes(Base):
 
 # Definir o modelo de classe para a tabela 'veiculos'
 class Veiculos(Base):
-    __tablename__ = 'veiculos'
+    __tablename__ = 'veiculos_1'
 
     ve_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada veículo
     ve_status = Column(String, nullable=True)
@@ -163,17 +163,17 @@ class Veiculos(Base):
     ve_anotacoes_controle = Column(String, nullable=True)
     ve_estado_grupo = Column(String, nullable=True)
     ve_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
-    veiculos_cl_id = Column(Integer, ForeignKey('clientes.cl_id', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'clientes'
+    veiculos_cl_id = Column(Integer, ForeignKey('clientes_1.cl_id', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'clientes'
 
     __table_args__ = (
-        UniqueConstraint('ve_placa1', 've_estado_grupo', 've_status', name='uq_placa1_estado_grupo'),  # Define a restrição de unicidade composta
+        UniqueConstraint('ve_placa1', 've_estado_grupo', 've_status', name='uq_placa1_estado_grupo_1'),  # Define a restrição de unicidade composta
     )
 
 class VistoriaImagens(Base):
-    __tablename__ = 'vistoria_imagens'
+    __tablename__ = 'vistoria_imagens_1'
     # add lat/long
     vi_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada registro
-    vi_veiculo_id = Column(Integer, ForeignKey('veiculos.ve_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para a tabela 'veiculos'
+    vi_veiculo_id = Column(Integer, ForeignKey('veiculos_1.ve_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para a tabela 'veiculos'
     vi_identificador = Column(String(50), nullable=False)  # Número da vistoria
     vi_status = Column(String(20), nullable=False) #
     vi_data_hora = Column(String, nullable=True)  # Alterado para DateTime
@@ -186,11 +186,11 @@ class VistoriaImagens(Base):
 
 
 class Sinistros(Base):
-    __tablename__ = 'sinistros'
+    __tablename__ = 'sinistros_1'
 
     si_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada sinistro
     si_codigo = Column(Integer, unique=True, nullable=False)  # Código único do sinistro
-    si_cliente_id = Column(Integer, ForeignKey('clientes.cl_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para a tabela 'clientes'
+    si_cliente_id = Column(Integer, ForeignKey('clientes_1.cl_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para a tabela 'clientes'
     si_veiculo_1 = Column(String, nullable=False)  # Veículo principal
     si_veiculo_2 = Column(String, nullable=True)  # Veículo adicional 1
     si_veiculo_3 = Column(String, nullable=True)  # Veículo adicional 2
@@ -228,7 +228,7 @@ class Sinistros(Base):
     
 
 class Lancamentos(Base):
-    __tablename__ = 'lancamentos'
+    __tablename__ = 'lancamentos_1'
 
     la_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada lançamento
     la_veiculo = Column(String, nullable=True)  # Veículo associado ao lançamento
@@ -244,13 +244,13 @@ class Lancamentos(Base):
     la_obs = Column(String, nullable=True)  # Observações adicionais
     la_anexos = Column(JSON, nullable=True)  # Anexos associados ao lançamento (armazenados como JSON)
     la_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
-    la_cliente_id = Column(Integer, ForeignKey('clientes.cl_id', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'clientes'
-    la_sinistro_codigo = Column(Integer, ForeignKey('sinistros.si_codigo', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'sinistros'
+    la_cliente_id = Column(Integer, ForeignKey('clientes_1.cl_id', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'clientes'
+    la_sinistro_codigo = Column(Integer, ForeignKey('sinistros_1.si_codigo', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'sinistros'
 
 
 # Define a tabela 'cobrancas'
 class Cobrancas(Base):
-    __tablename__ = 'cobrancas'
+    __tablename__ = 'cobrancas_1'
 
     co_id = Column(Integer, primary_key=True, autoincrement=True)  # Identificador único
     co_status_geral = Column(String(50), nullable=True)  # Status geral da cobrança
@@ -273,4 +273,4 @@ class Cobrancas(Base):
     co_dados_complementares = Column(JSON, nullable=True)  # Dados complementares (armazenados como JSON)
     co_historico_ultima_consulta = Column(String, nullable=True)  # Última consulta no histórico
     co_historico = Column(JSON, nullable=True)  # Histórico de interações (armazenado como JSON)
-    co_cliente_id = Column(Integer, ForeignKey('clientes.cl_id', ondelete='RESTRICT'), nullable=False)  # Chave estrangeira para clientes
+    co_cliente_id = Column(Integer, ForeignKey('clientes_1.cl_id', ondelete='RESTRICT'), nullable=False)  # Chave estrangeira para clientes

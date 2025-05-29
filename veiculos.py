@@ -145,7 +145,7 @@ while True:
                         valor_principal = None
                         agregado = None
                         indice_participacao = None
-                        estado_grupo = 'Grande Teste'
+                        estado_grupo = 'Grande SC'
 
                         for elemento in elementos:
                             texto = elemento.text.strip()
@@ -402,7 +402,7 @@ while True:
                             session.commit()
                             print(f"Veículo {dados_veiculo['placa'][0]} inserido com sucesso.")
                         except IntegrityError as e:
-                            if 'uq_placa1_estado_grupo_status' in str(e):
+                            if 'uq_placa1_estado_grupo_1' in str(e):
                                 print(f"Placa {dados_veiculo['placa'][0]} já está cadastrada no grupo {estado_grupo} com o status {status}.")
                             else:
                                 print(f"Erro ao inserir o veículo: {e}")

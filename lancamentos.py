@@ -296,11 +296,11 @@ while True:
                                 continue
                         elif sinistro:
                             # Extrai os números dentro dos colchetes usando regex
-                            sinistro_codigo_match = re.search(r'\[(\d+)/(\d+)-(\d+)\]', sinistro)
+                            sinistro_codigo_match = re.search(r'\[(\d+)/(\d+)(?:-(\d+))?\]', sinistro)
                             if sinistro_codigo_match:
-                                # Concatena os grupos capturados e converte para inteiro
-                                sinistro_codigo = int(f"{sinistro_codigo_match.group(1)}{sinistro_codigo_match.group(2)}{sinistro_codigo_match.group(3)}")
-                                print(f"Código do sinistro extraído e convertido: {sinistro_codigo}")
+                                # Concatena os grupos capturados (ignorando o terceiro grupo se não existir)
+                                sinistro_codigo = ''.join(filter(None, sinistro_codigo_match.groups()))
+                                print(f"Código do sinistro extraído: {sinistro_codigo}")
 
                                 # Verifica se o sinistro existe no banco de dados
                                 sinistro_obj = session.query(Sinistros).filter(Sinistros.si_codigo == sinistro_codigo).first()

@@ -269,9 +269,9 @@ while True:
                   session = Session()
                   
                   # Verifica se o cliente existe
-                  cliente = session.query(DadosClientes).filter(DadosClientes.razao_social.ilike(f"%{integrante}%")).first()
+                  cliente = session.query(DadosClientes).filter(DadosClientes.cl_razao_social.ilike(f"%{integrante}%")).first()
                   if cliente:
-                      print(f"ID do cliente encontrado: {cliente.id}")
+                      print(f"ID do cliente encontrado: {cliente.cl_id}")
                   else:
                     print(f"Nenhum cliente encontrado para o integrante: {integrante}")
                     pyautogui.click(x=153, y=656)
@@ -369,7 +369,7 @@ while True:
                             co_dados_complementares=dados_tabela if dados_tabela else None,  # Lista ou None
                             co_historico_ultima_consulta=str(ultima_consulta) if ultima_consulta else None,
                             co_historico=dados_historico if dados_historico else None,  # Lista ou None
-                            co_cliente_id=cliente.id if cliente else None,
+                            co_cliente_id=cliente.cl_id if cliente else None,
                           )
                           session.add(nova_cobranca)
                           session.commit()
