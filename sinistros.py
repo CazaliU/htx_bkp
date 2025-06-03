@@ -11,6 +11,7 @@ from sqlalchemy.exc import IntegrityError
 from urllib.parse import urljoin
 from dotenv import load_dotenv
 from selenium import webdriver
+from sqlalchemy import or_
 from datetime import datetime
 from bs4 import BeautifulSoup
 import pyautogui
@@ -284,7 +285,13 @@ while True:
                             session = Session()
                                 
                             # Verifica se o cliente existe
-                            cliente = session.query(DadosClientes).filter(DadosClientes.cl_razao_social.ilike(f"%{integrante_nome}%")).first()
+                            cliente = session.query(DadosClientes).filter(
+                                or_(
+                                    DadosClientes.cl_razao_social.ilike(f"%{integrante_nome}%"),
+                                    DadosClientes.cl_nome.ilike(f"%{integrante_nome}%")
+                                )
+                            ).first()
+                            
                             if cliente:
                                 print(f"ID do cliente encontrado: {cliente.cl_id}")
                                 

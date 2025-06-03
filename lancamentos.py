@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from selenium import webdriver
 from datetime import datetime
 from bs4 import BeautifulSoup
+from sqlalchemy import or_
 import pyautogui
 import paramiko
 import requests
@@ -288,7 +289,13 @@ while True:
 
                         if integrante:
                             # Verifica se o cliente existe no banco de dados pelo nome do integrante
-                            cliente = session.query(DadosClientes).filter(DadosClientes.cl_razao_social.ilike(f"%{integrante}%")).first()
+                            cliente = session.query(DadosClientes).filter(
+                                or_(
+                                    DadosClientes.cl_razao_social.ilike(f"%{integrante}%"),
+                                    DadosClientes.cl_nome.ilike(f"%{integrante}%")
+                                )
+                            ).first()
+                            
                             if cliente:
                                 print(f"ID do cliente encontrado: {cliente.cl_id}")
                             else:
