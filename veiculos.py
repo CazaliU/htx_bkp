@@ -121,32 +121,40 @@ while True:
 
                         # Analisa o HTML com BeautifulSoup
                         soup = BeautifulSoup(html, 'html.parser')
+                        
+                        # Extrai o HTML da aba aberta
+                        aba_dados = soup.find('div', class_='tab dados', style='display:block;')
 
                         status = None
                         inclusao = None
                         exclusao = None
                         valor_cota = None
 
-                        # Tenta encontrar o elemento com a classe 'label label-success'
-                        status_element = soup.find('div', class_='label label-success')
+                        if aba_dados:
+                            # Captura o status dentro da aba aberta
+                            status_element = aba_dados.find('div', class_='label label-success')
+                            if not status_element:
+                                status_element = aba_dados.find('div', class_='label label-danger')
+                            if not status_element:
+                                status_element = aba_dados.find('div', class_='label label-warning')  # Adiciona a busca pelo status com 'label label-warning'
 
-                        # Se não encontrar, tenta encontrar o elemento com a classe 'label label-danger'
-                        if not status_element:
-                            status_element = soup.find('div', class_='label label-danger')
+                            if status_element:
+                                status = status_element.text.strip()
+                            else:
+                                status = 'Status não encontrado'
 
-                        # Define o valor de 'status' com base no elemento encontrado
-                        if status_element:
-                            status = status_element.text.strip()
-                        else:
-                            status = 'Status não encontrado'
+                        # Captura os dados de inclusão e exclusão dentro da aba aberta
+                        sub_status_element = aba_dados.find('div', class_='sub_status')
+                        if sub_status_element:
+                            inclusao_element = sub_status_element.find('span', class_='font-success')
+                            exclusao_element = sub_status_element.find('span', class_='font-danger')
+                    
+                            if inclusao_element and inclusao_element.next_sibling:
+                                inclusao = inclusao_element.next_sibling.strip()
 
-                        # Captura os dados de inclusão e exclusão do contrato
-                        sub_status_elements = soup.find('div', class_='sub_status').find_all('span')
-                        if len(sub_status_elements) >= 1:
-                            inclusao = sub_status_elements[0].next_sibling.strip()
-                            if len(sub_status_elements) > 1:
-                                exclusao = sub_status_elements[1].next_sibling.strip()
-                                
+                            if exclusao_element and exclusao_element.next_sibling:
+                                exclusao = exclusao_element.next_sibling.strip()
+
                         # Encontrar todas as tags <span> com a classe 'label label-grey'
                         valor_cota_element = soup.find_all('span', class_='label label-grey')
 
