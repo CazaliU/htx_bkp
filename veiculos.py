@@ -53,7 +53,7 @@ submit_button.click()
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  # Substitua pela URL real da página
 
 # Aguarde a página carregar
-time.sleep(15)  # Pode ser necessário ajustar o tempo
+time.sleep(25)  # Pode ser necessário ajustar o tempo
 
 while True:
     try:
@@ -72,7 +72,7 @@ while True:
                 
                 # Clica no botão principal
                 botao_principal.click()
-                time.sleep(2)  # Aguarde o modal carregar
+                time.sleep(5)  # Aguarde o modal carregar
                 
                 # Localiza a aba "veículos" dentro do modal
                 aba_veiculos = driver.find_element(By.CSS_SELECTOR, 'li[data-id="veiculos"]')
@@ -173,7 +173,7 @@ while True:
                         valor_principal = None
                         agregado = None
                         indice_participacao = None
-                        estado_grupo = 'Grande SC'
+                        estado_grupo = 'Grande Oeste'
 
                         for elemento in elementos:
                             texto = elemento.text.strip()

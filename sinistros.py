@@ -296,9 +296,9 @@ while True:
                                 print(f"ID do cliente encontrado: {cliente.cl_id}")
                                 
                                 # Verifica se o código já existe no banco de dados
-                                sinistro_existente = session.query(Sinistros).filter(Sinistros.si_codigo == codigo).first()
+                                sinistro_existente = session.query(Sinistros).filter(Sinistros.si_codigo == codigo, Sinistros.si_cliente_id == cliente.cl_id).first()
                                 if sinistro_existente:
-                                    print(f"Código {codigo} já existe no banco de dados. Pulando para o próximo sinistro.")
+                                    print(f"Código {codigo} já existe no banco de dados para o cliente {cliente.cl_id}.")
                                     pyautogui.click(x=153, y=656)  # Fecha o modal
                                     time.sleep(1)
                                     continue  # Pula para o próximo item no loop

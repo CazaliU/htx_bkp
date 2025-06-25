@@ -310,7 +310,7 @@ while True:
                                 print(f"Código do sinistro extraído: {sinistro_codigo}")
 
                                 # Verifica se o sinistro existe no banco de dados
-                                sinistro_obj = session.query(Sinistros).filter(Sinistros.si_codigo == sinistro_codigo).first()
+                                sinistro_obj = session.query(Sinistros).filter(Sinistros.si_codigo == sinistro_codigo, Sinistros.si_cliente_id == cliente.cl_id).first()
                                 if sinistro_obj:
                                     print(f"Sinistro encontrado: {sinistro_obj.si_codigo}")
                                 else:

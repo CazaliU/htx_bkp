@@ -174,7 +174,7 @@ while True:
                     metodo_cobranca = None
                     indice_participacao = None
                     integracao_trackbrasil = None
-                    estado_grupo = 'Grande SC'
+                    estado_grupo = 'Grande Oeste'
 
                     for elemento in elementos:
                         texto = elemento.text.strip()
