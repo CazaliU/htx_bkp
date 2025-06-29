@@ -155,12 +155,28 @@ while True:
                             if exclusao_element and exclusao_element.next_sibling:
                                 exclusao = exclusao_element.next_sibling.strip()
 
-                        # Encontrar todas as tags <span> com a classe 'label label-grey'
-                        valor_cota_element = soup.find_all('span', class_='label label-grey')
+                            # Busca pela div que contém "Valor / Cotas:" DENTRO da aba dados
+                            portlet_options = aba_dados.find('div', class_='portlet-options')
+                            if portlet_options:
+                                # Busca todos os spans que podem conter o valor da cota
+                                spans_cota = portlet_options.find_all('span', class_=['label label-success', 'label label-danger', 'label label-grey'])
+                                
+                                # Procura pelo span que não contém 'R$' (que seria o valor da cota)
+                                for span in spans_cota:
+                                    texto = span.get_text(strip=True)
+                                    if not 'R$' in texto and ',' in texto:
+                                        valor_cota = texto
+                                        break
+                                        
+                                # Se não encontrou, pega o último span (geralmente é a cota)
+                                if not valor_cota and spans_cota:
+                                    ultimo_span = spans_cota[-1].get_text(strip=True)
+                                    if not 'R$' in ultimo_span:
+                                        valor_cota = ultimo_span
+                        else:
+                            print("Aba dados não encontrada")
 
-                        # Pegando o texto da primeira ocorrência
-                        if valor_cota_element:
-                            valor_cota = valor_cota_element[0].get_text(strip=True)
+                        print(f"Valor da cota encontrado: {valor_cota}")
 
                         # Encontrar todos os elementos com a classe 'twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button'
                         elementos = soup.find_all('div', class_=['twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button', 'twelve columns well branco'])
