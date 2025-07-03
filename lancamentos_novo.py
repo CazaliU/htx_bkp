@@ -340,21 +340,44 @@ while True:
                                         continue
                                 elif sinistro:
                                     # Extrai os números dentro dos colchetes usando regex
+                                    sinistro_codigo = None
+                                    
+                                    # Padrão 1: [num/num-num] ou [num/num]
                                     sinistro_codigo_match = re.search(r'\[(\d+)/(\d+)(?:-(\d+))?\]', sinistro)
                                     if sinistro_codigo_match:
                                         # Concatena os grupos capturados (ignorando o terceiro grupo se não existir)
                                         sinistro_codigo = ''.join(filter(None, sinistro_codigo_match.groups()))
-                                        print(f"Código do sinistro extraído: {sinistro_codigo}")
+                                        print(f"Código do sinistro extraído (padrão completo): {sinistro_codigo}")
+                                    else:
+                                        # Padrão 2: [num/] (número seguido de barra sem segundo número)
+                                        sinistro_codigo_match_barra = re.search(r'\[(\d+)/\]', sinistro)
+                                        if sinistro_codigo_match_barra:
+                                            sinistro_codigo = sinistro_codigo_match_barra.group(1)
+                                            print(f"Código do sinistro extraído (padrão com barra): {sinistro_codigo}")
+                                        else:
+                                            # Padrão 3: [num] (apenas um número)
+                                            sinistro_codigo_match_simples = re.search(r'\[(\d+)\]', sinistro)
+                                            if sinistro_codigo_match_simples:
+                                                sinistro_codigo = sinistro_codigo_match_simples.group(1)
+                                                print(f"Código do sinistro extraído (padrão simples): {sinistro_codigo}")
+                                            else:
+                                                print(f"Não foi possível extrair o código do sinistro de '{sinistro}'.")
+                                                sinistro_codigo = None
 
+                                    if sinistro_codigo:
                                         # Verifica se o sinistro existe no banco de dados
-                                        sinistro_obj = session.query(Sinistros).filter(Sinistros.si_codigo == sinistro_codigo, Sinistros.si_cliente_id == cliente.cl_id).first()
+                                        sinistro_obj = session.query(Sinistros).filter(
+                                            Sinistros.si_codigo == sinistro_codigo, 
+                                            Sinistros.si_cliente_id == cliente.cl_id
+                                        ).first()
+                                        
                                         if sinistro_obj:
                                             print(f"Sinistro encontrado: {sinistro_obj.si_codigo}")
                                         else:
                                             print(f"Sinistro com o código '{sinistro_codigo}' não encontrado no banco de dados.")
                                             continue
                                     else:
-                                        print(f"Não foi possível extrair o código do sinistro de '{sinistro}'.")
+                                        print("Código do sinistro não foi extraído.")
 
                             except Exception as e:
                                 print(f"Erro ao consultar o banco de dados: {e}")
