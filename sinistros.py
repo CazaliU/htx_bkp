@@ -155,12 +155,12 @@ password_input.send_keys(password)  # Substitua pela sua senha
 submit_button.click()
 
 # Aguarde a página carregar
-time.sleep(3)  # Pode ser necessário ajustar o tempo
+time.sleep(12)  # Pode ser necessário ajustar o tempo
 
 # Navega para a página onde está o status
 driver.get('https://www.hitex.com.br/plataforma/index.php?p=gestor-administrativo&g=0')  
 
-time.sleep(15)
+time.sleep(22)
 
 # Espera até que o modal esteja visível
 modal_selector = 'modal-body'  # Substitua pelo seletor que corresponde ao modal
@@ -186,7 +186,7 @@ while True:
                 
                 # Clica no botão para abrir o modal
                 botao.click()
-                time.sleep(2)  # Aguarde o modal carregar
+                time.sleep(3)  # Aguarde o modal carregar
                 
                 # Extrai o HTML da página
                 html = driver.page_source
@@ -463,7 +463,7 @@ while True:
                 # Localiza a aba anexos dentro do modal
                 aba_anexos = driver.find_element(By.CSS_SELECTOR, 'li[data-id="anexos"]')
                 aba_anexos.click()
-                time.sleep(2)  # Aguarde o carregamento da aba
+                time.sleep(3)  # Aguarde o carregamento da aba
                 
                 # Extrai o HTML da página
                 html = driver.page_source
@@ -563,7 +563,7 @@ while True:
         driver.execute_script("arguments[0].scrollIntoView();", botao_proxima)
         time.sleep(1)
         botao_proxima.click()
-        time.sleep(3)
+        time.sleep(12)
             
     except Exception as e:
         print(f"Erro durante a navegação: {e}")
