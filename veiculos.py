@@ -11,6 +11,7 @@ from sqlalchemy import or_
 from dotenv import load_dotenv
 from selenium import webdriver
 from bs4 import BeautifulSoup
+from datetime import datetime
 import pyautogui
 import time
 import os
@@ -307,10 +308,39 @@ while True:
                         session = Session()
                         
                         # Verificar se a placa1 já está cadastrada no grupo com o mesmo status
-                        placa1_existe = session.query(Veiculos).filter_by(ve_placa1=dados_veiculo["placa"][0], ve_estado_grupo=estado_grupo, ve_status=status).first()
+                        placa1_existe = session.query(Veiculos).filter_by(
+                            ve_placa1=dados_veiculo["placa"][0],
+                            ve_estado_grupo=estado_grupo,
+                            ve_status=status
+                        ).first()
                         if placa1_existe:
-                            print(f"Placa {dados_veiculo['placa'][0]} já está cadastrada no grupo {estado_grupo} com o status {status}.")
-                            # Fecha o modal interno
+                            # Se a placa já existe com o mesmo status, atualiza ve_valor_principal, ve_agregado e ve_valor_cota (se houverem)
+                            updated_fields = []
+                            try:
+                                if valor_principal:
+                                    placa1_existe.ve_valor_principal = empty_to_none(valor_principal)
+                                    updated_fields.append('ve_valor_principal')
+                                if agregado:
+                                    placa1_existe.ve_agregado = empty_to_none(agregado)
+                                    updated_fields.append('ve_agregado')
+                                if valor_cota:
+                                    placa1_existe.ve_valor_cota = empty_to_none(valor_cota)
+                                    updated_fields.append('ve_valor_cota')
+
+                                # Sempre atualiza timestamp de atualização quando pelo menos um campo for atualizado
+                                if updated_fields:
+                                    placa1_existe.ve_atualizado_em = datetime.now().isoformat()
+                                    updated_fields.append('ve_atualizado_em')
+                                    session.commit()
+                                    print(f"Atualizado {', '.join(updated_fields)} do veículo {placa1_existe.ve_placa1} (mesmo status)")
+                                else:
+                                    print(f"Placa {dados_veiculo['placa'][0]} já cadastrada no grupo {estado_grupo} com o status {status} (nenhum campo para atualizar).")
+
+                            except Exception as e:
+                                session.rollback()
+                                print(f"Erro ao atualizar campos do veículo {placa1_existe.ve_placa1}: {e}")
+
+                            # Fecha o modal interno e pula a inserção normal
                             pyautogui.click(x=153, y=656)
                             time.sleep(1)
                             continue

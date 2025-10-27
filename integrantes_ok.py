@@ -82,7 +82,11 @@ while True:
                 html = driver.page_source
 
                 # Analisa o HTML com BeautifulSoup
-                soup = BeautifulSoup(html, 'html.parser')
+                if html:
+                    soup = BeautifulSoup(html, 'html.parser')
+                else:
+                    print("HTML vazio! Verifique a requisição ou o arquivo.")
+
 
                 status = None
                 inclusao = None

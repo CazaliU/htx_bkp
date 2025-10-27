@@ -163,6 +163,7 @@ class Veiculos(Base):
     ve_anotacoes_controle = Column(String, nullable=True)
     ve_estado_grupo = Column(String, nullable=True)
     ve_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
+    ve_atualizado_em = Column(String, nullable=True)  # Data da última atualização (timestamp ISO)
     veiculos_cl_id = Column(Integer, ForeignKey('clientes_1.cl_id', ondelete='SET NULL'), nullable=True)  # Chave estrangeira para a tabela 'clientes'
 
     __table_args__ = (
