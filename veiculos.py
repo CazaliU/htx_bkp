@@ -4,7 +4,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from sqlalchemy.orm import sessionmaker, session
-from sql import engine, Veiculos, DadosClientes
+from sql import engine, Veiculos_copy, DadosClientes
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import or_
@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from selenium import webdriver
 from bs4 import BeautifulSoup
 from datetime import datetime
+import re
 import pyautogui
 import time
 import os
@@ -88,18 +89,9 @@ while True:
                 if len(botoes_modal) == 0:
                     print("Nenhum botão 'VER' encontrado. Tentando mostrar desativados...")
                     
-                # Localiza e clica no botão "Mostrar Desativados"
-                try:
-                    botao_mostrar_desativados = driver.find_element(By.CSS_SELECTOR, 'button.btn.btn-sm.btn-info.vmd')
-                    botao_mostrar_desativados.click()
-                    time.sleep(2)  # Aguarda os botões desativados aparecerem
-                    
-                # Tenta localizar novamente os botões "VER"
-                    botoes_modal = driver.find_elements(By.CSS_SELECTOR, 'table.table_simples.veiculos a.bold.info_veiculo')
-                    print(f"Total de botões 'VER' após mostrar desativados: {len(botoes_modal)}")
-                except Exception as e:
-                    print(f"Erro ao tentar mostrar botões desativados: {e}")
-                    # Fecha o modal e vai para o próximo botão principal
+                # Se não quiser mostrar desativados, fecha o modal e segue quando não houver botões
+                if len(botoes_modal) == 0:
+                    print("Nenhum botão 'VER' encontrado e não vamos mostrar desativados. Fechando modal.")
                     pyautogui.click(x=153, y=656)
                     time.sleep(1)
                     continue
@@ -178,6 +170,15 @@ while True:
                             print("Aba dados não encontrada")
 
                         print(f"Valor da cota encontrado: {valor_cota}")
+
+                        # Somente processa veículos com status 'ativo' (ignora clientes)
+                        # Usamos regex para garantir que 'inativo' não case como 'ativo'
+                        if status is None or not re.search(r"\bativo\b", status, re.IGNORECASE):
+                            print(f"Ignorando veículo com status '{status}' (apenas 'ativo' será processado).")
+                            # Fecha o modal interno e segue para o próximo
+                            pyautogui.click(x=153, y=656)
+                            time.sleep(1)
+                            continue
 
                         # Encontrar todos os elementos com a classe 'twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button'
                         elementos = soup.find_all('div', class_=['twelve columns fv', 'six columns fv', 'four columns fv', 'four columns fv input-button', 'twelve columns well branco'])
@@ -308,7 +309,7 @@ while True:
                         session = Session()
                         
                         # Verificar se a placa1 já está cadastrada no grupo com o mesmo status
-                        placa1_existe = session.query(Veiculos).filter_by(
+                        placa1_existe = session.query(Veiculos_copy).filter_by(
                             ve_placa1=dados_veiculo["placa"][0],
                             ve_estado_grupo=estado_grupo,
                             ve_status=status
@@ -345,38 +346,11 @@ while True:
                             time.sleep(1)
                             continue
                         
-                        #pegar razao socail ou nome cpf
-                        if integrante:
-                            try:
-                                Session = sessionmaker(bind=engine)
-                                session = Session()
-
-                                # Verifica se o integrante já existe no campo 'cl_razao_social' ou 'cl_nome'
-                                cliente = session.query(DadosClientes).filter(
-                                    or_(
-                                        DadosClientes.cl_razao_social.ilike(f"%{integrante}%"),
-                                        DadosClientes.cl_nome.ilike(f"%{integrante}%")
-                                    )
-                                ).first()
-
-                                if cliente:
-                                    print(f"ID do cliente encontrado: {cliente.cl_id}")
-                                else:
-                                    print(f"Cliente com o nome ou razão social '{integrante}' não encontrado.")
-                                    cliente_encontrado = False
-                                    # Fecha o modal interno
-                                    pyautogui.click(x=153, y=656)
-                                    time.sleep(1)
-                                    break
-
-                            except Exception as e:
-                                print(f"Erro ao buscar cliente: {e}")
-                            finally:
-                                session.close()
+                        # Ignora associação com cliente: estamos atualizando/gravando placas apenas pelo status
+                        cliente = None
                         
                         # Cria uma instância da classe Veiculos
-                        veiculo = Veiculos(
-                            veiculos_cl_id=cliente.cl_id if cliente else None,
+                        veiculo = Veiculos_copy(
                             ve_status=empty_to_none(status),
                             ve_inclusao=empty_to_none(inclusao),
                             ve_exclusao=empty_to_none(exclusao),
