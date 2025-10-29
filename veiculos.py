@@ -89,9 +89,18 @@ while True:
                 if len(botoes_modal) == 0:
                     print("Nenhum botão 'VER' encontrado. Tentando mostrar desativados...")
                     
-                # Se não quiser mostrar desativados, fecha o modal e segue quando não houver botões
-                if len(botoes_modal) == 0:
-                    print("Nenhum botão 'VER' encontrado e não vamos mostrar desativados. Fechando modal.")
+                # Localiza e clica no botão "Mostrar Desativados"
+                try:
+                    botao_mostrar_desativados = driver.find_element(By.CSS_SELECTOR, 'button.btn.btn-sm.btn-info.vmd')
+                    botao_mostrar_desativados.click()
+                    time.sleep(2)  # Aguarda os botões desativados aparecerem
+                    
+                # Tenta localizar novamente os botões "VER"
+                    botoes_modal = driver.find_elements(By.CSS_SELECTOR, 'table.table_simples.veiculos a.bold.info_veiculo')
+                    print(f"Total de botões 'VER' após mostrar desativados: {len(botoes_modal)}")
+                except Exception as e:
+                    print(f"Erro ao tentar mostrar botões desativados: {e}")
+                    # Fecha o modal e vai para o próximo botão principal
                     pyautogui.click(x=153, y=656)
                     time.sleep(1)
                     continue
