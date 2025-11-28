@@ -5,7 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
-from sql import engine, DadosClientes
+from sql import engine, DadosClientes, Aportes
 from sqlalchemy.orm import sessionmaker
 from selenium import webdriver
 from dotenv import load_dotenv
@@ -220,39 +220,85 @@ while True:
                             integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
 
                     # Exibe os valores capturados
-                    print(f"Razão Social: {razao_social}")
-                    print(f"CNPJ: {cnpj}")
-                    print(f"Nome: {nome}")
-                    print(f"Nacionalidade: {nacionalidade}")
-                    print(f"Estado Civil: {estado_civil}")
-                    print(f"Profissão: {profissao}")
-                    print(f"RG: {rg}")
-                    print(f"Orgão Exp: {orgao_exp}")
-                    print(f"CPF: {cpf}")
-                    print(f"Nascimento: {nascimento}")
-                    print(f"Celular Preferencial: {celular_preferencial}")
-                    print(f"Celular Complementar: {celular_complementar}")
-                    print(f"Telefone: {telefone}")
-                    print(f"E-mail: {email}")
-                    print(f"Vigência do Contrato: {vigencia_contrato}")
-                    print(f"Método de Cobrança: {metodo_cobranca}")
-                    print(f"Índice de Participação Padrão: {indice_participacao}")
-                    print(f"Integração TrackBrasil: {integracao_trackbrasil}")
-                    print(f"Logradouros: {logradouros}")
-                    print(f"Números: {numeros}")
-                    print(f"Bairros: {bairros}")
-                    print(f"CEPs: {ceps}")
-                    print(f"Complementos: {complementos}")
-                    print(f"Referências: {referencias}")
-                    print(f"Estados: {estados}")
-                    print(f"Cidades: {cidades}")
+                    # print(f"Razão Social: {razao_social}")
+                    # print(f"CNPJ: {cnpj}")
+                    # print(f"Nome: {nome}")
+                    # print(f"Nacionalidade: {nacionalidade}")
+                    # print(f"Estado Civil: {estado_civil}")
+                    # print(f"Profissão: {profissao}")
+                    # print(f"RG: {rg}")
+                    # print(f"Orgão Exp: {orgao_exp}")
+                    # print(f"CPF: {cpf}")
+                    # print(f"Nascimento: {nascimento}")
+                    # print(f"Celular Preferencial: {celular_preferencial}")
+                    # print(f"Celular Complementar: {celular_complementar}")
+                    # print(f"Telefone: {telefone}")
+                    # print(f"E-mail: {email}")
+                    # print(f"Vigência do Contrato: {vigencia_contrato}")
+                    # print(f"Método de Cobrança: {metodo_cobranca}")
+                    # print(f"Índice de Participação Padrão: {indice_participacao}")
+                    # print(f"Integração TrackBrasil: {integracao_trackbrasil}")
+                    # print(f"Logradouros: {logradouros}")
+                    # print(f"Números: {numeros}")
+                    # print(f"Bairros: {bairros}")
+                    # print(f"CEPs: {ceps}")
+                    # print(f"Complementos: {complementos}")
+                    # print(f"Referências: {referencias}")
+                    # print(f"Estados: {estados}")
+                    # print(f"Cidades: {cidades}")
                 else:
                     print("Contêiner 'dados' não encontrado.")
                     
                 # # Localiza a aba "financeiro" dentro do modal
-                # aba_financeiro = driver.find_element(By.CSS_SELECTOR, 'li#licobint[data-id="financeiro"]')
-                # aba_financeiro.click()
-                # time.sleep(2)
+                aba_financeiro = driver.find_element(By.CSS_SELECTOR, 'li#licobint[data-id="financeiro"]')
+                aba_financeiro.click()
+                time.sleep(2)
+                
+                # Captura dados da tabela Fundo de Rateio
+                html_financeiro = driver.page_source
+                soup_financeiro = BeautifulSoup(html_financeiro, 'html.parser')
+                
+                aportes_capturados = []  # Lista para armazenar aportes temporariamente
+                fundo_rateio_div = soup_financeiro.find('div', id='lfundo')
+                if fundo_rateio_div:
+                    tabela_fundo = fundo_rateio_div.find('table', class_='table_simples')
+                    if tabela_fundo:
+                        linhas = tabela_fundo.find('tbody').find_all('tr')
+                        
+                        print("\n=== FUNDO DE RATEIO ===")
+                        for linha in linhas[:-1]:  # Ignora a última linha (totais)
+                            colunas = linha.find_all('td')
+                            if len(colunas) >= 6:
+                                aporte_id = colunas[0].text.strip()
+                                data = colunas[1].text.strip()
+                                tipo = colunas[2].text.strip()
+                                valor = colunas[3].text.strip()
+                                valor_pago = colunas[4].text.strip()
+                                percentual = colunas[5].text.strip()
+                                
+                                # Armazena o aporte para salvar depois
+                                aportes_capturados.append({
+                                    'id': aporte_id,
+                                    'data': data,
+                                    'tipo': tipo,
+                                    'valor': valor,
+                                    'valor_pago': valor_pago,
+                                    'percentual': percentual
+                                })
+                                
+                                print(f"ID: {aporte_id} | Data: {data} | Tipo: {tipo} | Valor: {valor} | Pago: {valor_pago} | %: {percentual}")
+                        
+                        # Captura linha de totais
+                        linha_total = linhas[-1]
+                        colunas_total = linha_total.find_all('td')
+                        if len(colunas_total) >= 2:
+                            total_aportes = colunas_total[0].text.strip()
+                            caixa_total = colunas_total[1].text.strip()
+                            print(f"\n{total_aportes}")
+                            print(f"{caixa_total}")
+                        print("=" * 50 + "\n")
+                else:
+                    print("Fundo de Rateio não encontrado.")
                 
                 # Criar sessão
                 Session = sessionmaker(bind=engine)
@@ -335,6 +381,23 @@ while True:
                         # Adicionar e confirmar a transação
                         session.add(novo_dado)
                         session.commit()
+                        
+                        # Salva os aportes relacionados ao cliente
+                        if aportes_capturados:
+                            print(f"Salvando {len(aportes_capturados)} aportes para o cliente {novo_dado.cl_id}...")
+                            for aporte_data in aportes_capturados:
+                                aporte = Aportes(
+                                    ap_cliente_id=novo_dado.cl_id,
+                                    ap_id_aporte=aporte_data['id'],
+                                    ap_data=aporte_data['data'],
+                                    ap_tipo=aporte_data['tipo'],
+                                    ap_valor=aporte_data['valor'],
+                                    ap_valor_pago=aporte_data['valor_pago'],
+                                    ap_percentual=aporte_data['percentual']
+                                )
+                                session.add(aporte)
+                            session.commit()
+                            print(f"Aportes salvos com sucesso!")
                     except IntegrityError as e:
                         if 'uq_cnpj_estado_grupo' in str(e.orig):
                             print(f"Erro: O CNPJ {novo_dado.cnpj}, estado Grupo {novo_dado.estado_grupo} e cpf {novo_dado.cpf} já existem no banco de dados.")

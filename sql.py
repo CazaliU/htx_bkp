@@ -64,6 +64,20 @@ class DadosClientes(Base):
     )
 
 
+# Definir o modelo de classe para a tabela 'aportes'
+class Aportes(Base):
+    __tablename__ = 'aportes_1'
+
+    ap_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada aporte
+    ap_cliente_id = Column(Integer, ForeignKey('clientes_2.cl_id', ondelete='CASCADE'), nullable=True)  # Chave estrangeira para a tabela 'clientes_2'
+    ap_id_aporte = Column(String, nullable=True)  # ID do aporte (#4770, etc.)
+    ap_data = Column(String, nullable=True)  # Data do aporte
+    ap_tipo = Column(String, nullable=True)  # Tipo (Aporte)
+    ap_valor = Column(String, nullable=True)  # Valor do aporte
+    ap_valor_pago = Column(String, nullable=True)  # Valor pago
+    ap_percentual = Column(String, nullable=True)  # Percentual (%)
+
+
 # Definir o modelo de classe para a tabela 'veiculos'
 class Veiculos(Base):
     __tablename__ = 'veiculos_1'
