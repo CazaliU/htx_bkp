@@ -248,8 +248,12 @@ while True:
                     print(f"Cidades: {cidades}")
                 else:
                     print("Contêiner 'dados' não encontrado.")
-
-
+                    
+                # # Localiza a aba "financeiro" dentro do modal
+                # aba_financeiro = driver.find_element(By.CSS_SELECTOR, 'li#licobint[data-id="financeiro"]')
+                # aba_financeiro.click()
+                # time.sleep(2)
+                
                 # Criar sessão
                 Session = sessionmaker(bind=engine)
                 session = Session()
