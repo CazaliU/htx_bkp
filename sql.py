@@ -76,6 +76,9 @@ class Aportes(Base):
     ap_valor = Column(String, nullable=True)  # Valor do aporte
     ap_valor_pago = Column(String, nullable=True)  # Valor pago
     ap_percentual = Column(String, nullable=True)  # Percentual (%)
+    ap_total_aportes_calculados = Column(String, nullable=True)  # Total de aportes calculados
+    ap_caixa_total = Column(String, nullable=True)  # Caixa total
+    
 
 
 # Definir o modelo de classe para a tabela 'veiculos'

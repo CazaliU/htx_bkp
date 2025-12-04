@@ -178,7 +178,7 @@ while True:
                     metodo_cobranca = None
                     indice_participacao = None
                     integracao_trackbrasil = None
-                    estado_grupo = 'Grande Oeste'
+                    estado_grupo = 'Grande SC'
 
                     for elemento in elementos:
                         texto = elemento.text.strip()
@@ -259,6 +259,9 @@ while True:
                 soup_financeiro = BeautifulSoup(html_financeiro, 'html.parser')
                 
                 aportes_capturados = []  # Lista para armazenar aportes temporariamente
+                total_aportes_calculados = None
+                caixa_total_valor = None
+                
                 fundo_rateio_div = soup_financeiro.find('div', id='lfundo')
                 if fundo_rateio_div:
                     tabela_fundo = fundo_rateio_div.find('table', class_='table_simples')
@@ -292,10 +295,17 @@ while True:
                         linha_total = linhas[-1]
                         colunas_total = linha_total.find_all('td')
                         if len(colunas_total) >= 2:
-                            total_aportes = colunas_total[0].text.strip()
-                            caixa_total = colunas_total[1].text.strip()
-                            print(f"\n{total_aportes}")
-                            print(f"{caixa_total}")
+                            # Extrai o valor do span (ex: "136.5" e "R$ 273.000,00")
+                            span_total = colunas_total[0].find('span')
+                            span_caixa = colunas_total[1].find('span')
+                            
+                            if span_total:
+                                total_aportes_calculados = span_total.text.strip()
+                            if span_caixa:
+                                caixa_total_valor = span_caixa.text.strip()
+                            
+                            print(f"\nTotal Aportes: {total_aportes_calculados}")
+                            print(f"Caixa Total: {caixa_total_valor}")
                         print("=" * 50 + "\n")
                 else:
                     print("Fundo de Rateio não encontrado.")
@@ -393,11 +403,13 @@ while True:
                                     ap_tipo=aporte_data['tipo'],
                                     ap_valor=aporte_data['valor'],
                                     ap_valor_pago=aporte_data['valor_pago'],
-                                    ap_percentual=aporte_data['percentual']
+                                    ap_percentual=aporte_data['percentual'],
+                                    ap_total_aportes_calculados=total_aportes_calculados,
+                                    ap_caixa_total=caixa_total_valor
                                 )
                                 session.add(aporte)
                             session.commit()
-                            print(f"Aportes salvos com sucesso!")
+                            print(f"Aportes salvos com sucesso! (Total: {total_aportes_calculados}, Caixa: {caixa_total_valor})")
                     except IntegrityError as e:
                         if 'uq_cnpj_estado_grupo' in str(e.orig):
                             print(f"Erro: O CNPJ {novo_dado.cnpj}, estado Grupo {novo_dado.estado_grupo} e cpf {novo_dado.cpf} já existem no banco de dados.")
