@@ -527,9 +527,16 @@ while True:
                             if aba_dados:
                                 print(f"\n=== COBRANÇA {idx + 1} ===")
                                 
-                                # Extrai tipo de cobrança (título)
-                                tipo_cobranca_elem = aba_dados.find('span', class_='font-danger')
-                                tipo_cobranca = tipo_cobranca_elem.text.strip() if tipo_cobranca_elem else ""
+                                # Extrai tipo de cobrança (título) - pode ter classes: font-danger, font-info, font-default, etc
+                                h3_tipo = aba_dados.find('h3', class_='form_section')
+                                tipo_cobranca = ""
+                                if h3_tipo:
+                                    span_tipo = h3_tipo.find('span')
+                                    if span_tipo:
+                                        tipo_cobranca = span_tipo.text.strip()
+                                    else:
+                                        # Se não tiver span, pega o texto diretamente do h3
+                                        tipo_cobranca = h3_tipo.text.strip()
                                 
                                 # Extrai integrante
                                 integrante_div = aba_dados.find('div', class_='twelve columns fv')
@@ -787,6 +794,17 @@ while True:
                     except Exception as e_pag:
                         print(f"Não há mais páginas de cobranças ou erro ao paginar: {str(e_pag)}")
                         break
+                
+                # Fecha o modal de cobranças (aba financeiro) e o modal do cliente antes de ir para o próximo
+                print("\nFechando modais...")
+                try:
+                    # Fecha modal com ESC (pode precisar apertar 2 vezes - um para financeiro, outro para cliente)
+                    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+                    time.sleep(1.5)
+                    driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+                    time.sleep(1.5)
+                except:
+                    pass
                 
                 # Fecha a sessão do banco de dados
                 session.close()
