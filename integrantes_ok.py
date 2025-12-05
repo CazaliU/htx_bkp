@@ -429,7 +429,8 @@ while True:
                             print(f"Vencimento: {vencimento}")
                             print(f"Emissão: {emissao}")
                             print(f"Vencimento Original: {vencimento_original}")
-                            print(f"Parcela: {numero_parcela} de {qtd_parcelas}")
+                            print(f"N° da Parcela: {numero_parcela}")
+                            print(f"Qtd. de Parcelas: {qtd_parcelas}")
                             print(f"Protesto Automático: {protesto_automatico}")
                             print(f"Dias p/ Protestar: {dias_protestar}")
                             print(f"Banco: {banco}")
@@ -438,6 +439,64 @@ while True:
                             print(f"Status: {status_cobranca}")
                             print(f"Valor: {valor_principal}")
                             print(f"Taxas: {taxas_bancarias}")
+                            
+                            # Agora clica na aba "historico" para capturar esses dados
+                            try:
+                                aba_historico_btn = driver.find_element(By.CSS_SELECTOR, 'div#modal1 li[data-id="historico"]')
+                                driver.execute_script("arguments[0].click();", aba_historico_btn)
+                                time.sleep(1)
+                                
+                                # Captura HTML atualizado do modal com a aba histórico
+                                modal_element_hist = driver.find_element(By.CSS_SELECTOR, 'div#modal1')
+                                html_modal_hist = modal_element_hist.get_attribute('outerHTML')
+                                soup_modal_hist = BeautifulSoup(html_modal_hist, 'html.parser')
+                                
+                                # Localiza a aba "historico"
+                                aba_historico = soup_modal_hist.find('div', class_='tab historico')
+                                
+                                if aba_historico:
+                                    # Extrai "Última Consulta"
+                                    ultima_consulta = ""
+                                    ultima_consulta_div = aba_historico.find('div', class_='twelve columns fv')
+                                    if ultima_consulta_div:
+                                        texto_consulta = ultima_consulta_div.text.strip()
+                                        ultima_consulta = texto_consulta.replace("Última Consulta:", "").strip()
+                                    
+                                    # Extrai histórico de interações da tabela
+                                    historico_interacoes = []
+                                    tabela_historico = aba_historico.find('table', class_='table_simples')
+                                    if tabela_historico:
+                                        linhas_hist = tabela_historico.find('tbody').find_all('tr')
+                                        for linha in linhas_hist:
+                                            colunas_hist = linha.find_all('td')
+                                            if len(colunas_hist) >= 4:
+                                                tipo_label = colunas_hist[0].find('span')
+                                                tipo_interacao = tipo_label.text.strip() if tipo_label else ""
+                                                data_interacao = colunas_hist[1].text.strip()
+                                                instrucao = colunas_hist[2].text.strip()
+                                                motivos = colunas_hist[3].text.strip()
+                                                
+                                                historico_interacoes.append({
+                                                    'tipo': tipo_interacao,
+                                                    'data': data_interacao,
+                                                    'instrucao': instrucao,
+                                                    'motivos': motivos
+                                                })
+                                    
+                                    # Adiciona ao dicionário de cobrança
+                                    cobranca_dados['ultima_consulta'] = ultima_consulta
+                                    cobranca_dados['historico_interacoes'] = historico_interacoes
+                                    
+                                    # Imprime dados do histórico
+                                    print(f"Última Consulta: {ultima_consulta}")
+                                    if historico_interacoes:
+                                        print("Histórico de Interações:")
+                                        for interacao in historico_interacoes:
+                                            print(f"  [{interacao['tipo']}] {interacao['data']} - {interacao['instrucao']} - {interacao['motivos']}")
+                                    
+                            except Exception as e_hist:
+                                print(f"Erro ao capturar histórico: {str(e_hist)}")
+                            
                             print("=" * 50)
                             
                         # Fecha o modal usando ESC ou clicando fora
