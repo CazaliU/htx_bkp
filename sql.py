@@ -78,8 +78,56 @@ class Aportes(Base):
     ap_percentual = Column(String, nullable=True)  # Percentual (%)
     ap_total_aportes_calculados = Column(String, nullable=True)  # Total de aportes calculados
     ap_caixa_total = Column(String, nullable=True)  # Caixa total
-    
 
+
+# Definir o modelo de classe para a tabela 'cobrancas_2'
+class Cobrancas_2(Base):
+    __tablename__ = 'cobrancas_2'
+
+    co_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único para cada cobrança
+    co_cliente_id = Column(Integer, ForeignKey('clientes_2.cl_id', ondelete='CASCADE'), nullable=False)  # Chave estrangeira para clientes_2
+    co_tipo_cobranca = Column(String, nullable=True)  # Tipo: Rateio de Sinistros, Taxa de Administração, etc.
+    co_integrante = Column(String, nullable=True)  # Nome do integrante
+    co_id_cobranca = Column(String, nullable=True)  # ID da cobrança
+    co_nosso_numero = Column(String, nullable=True)  # Nosso número
+    co_vencimento = Column(String, nullable=True)  # Data de vencimento
+    co_emissao = Column(String, nullable=True)  # Data de emissão
+    co_vencimento_original = Column(String, nullable=True)  # Vencimento original
+    co_numero_parcela = Column(String, nullable=True)  # Número da parcela
+    co_qtd_parcelas = Column(String, nullable=True)  # Quantidade de parcelas
+    co_protesto_automatico = Column(String, nullable=True)  # Protesto automático
+    co_dias_protestar = Column(String, nullable=True)  # Dias para protestar
+    co_banco = Column(String, nullable=True)  # Banco
+    co_conta = Column(String, nullable=True)  # Conta
+    co_remessado = Column(String, nullable=True)  # Remessado
+    co_status = Column(String, nullable=True)  # Status da cobrança
+    co_valor_principal = Column(String, nullable=True)  # Valor principal
+    co_taxas_bancarias = Column(String, nullable=True)  # Taxas bancárias
+    co_ultima_consulta = Column(String, nullable=True)  # Última consulta
+    co_historico_interacoes = Column(JSON, nullable=True)  # Histórico de interações (JSON array)
+    co_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
+
+
+# Definir o modelo de classe para a tabela 'resumo_cobrancas_2'
+class ResumoCobrancas_2(Base):
+    __tablename__ = 'resumo_cobrancas_2'
+
+    rc_id = Column(Integer, primary_key=True, autoincrement=True)  # ID único
+    rc_cliente_id = Column(Integer, ForeignKey('clientes_2.cl_id', ondelete='CASCADE'), nullable=False)  # FK para clientes_2
+    rc_taxa_admin_total = Column(String, nullable=True)  # Taxa Administração - Total
+    rc_taxa_admin_pendente = Column(String, nullable=True)  # Taxa Administração - Pendente
+    rc_rateio_sinistros_total = Column(String, nullable=True)  # Rateio Sinistros - Total
+    rc_rateio_sinistros_pendente = Column(String, nullable=True)  # Rateio Sinistros - Pendente
+    rc_aporte_fundo_total = Column(String, nullable=True)  # Aporte ao Fundo - Total
+    rc_aporte_fundo_pendente = Column(String, nullable=True)  # Aporte ao Fundo - Pendente
+    rc_servico_complementar_total = Column(String, nullable=True)  # Serviço Complementar - Total
+    rc_servico_complementar_pendente = Column(String, nullable=True)  # Serviço Complementar - Pendente
+    rc_outra_especificacao_total = Column(String, nullable=True)  # Outra Especificação - Total
+    rc_outra_especificacao_pendente = Column(String, nullable=True)  # Outra Especificação - Pendente
+    rc_total_em_aberto = Column(String, nullable=True)  # TOTAL EM ABERTO
+    rc_total_vencido = Column(String, nullable=True)  # TOTAL VENCIDO
+    rc_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
+    
 
 # Definir o modelo de classe para a tabela 'veiculos'
 class Veiculos(Base):

@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
-from sql import engine, DadosClientes, Aportes
+from sql import engine, DadosClientes, Aportes, Cobrancas_2
 from sqlalchemy.orm import sessionmaker
 from selenium import webdriver
 from dotenv import load_dotenv
@@ -87,7 +87,6 @@ while True:
                     soup = BeautifulSoup(html, 'html.parser')
                 else:
                     print("HTML vazio! Verifique a requisição ou o arquivo.")
-
 
                 status = None
                 inclusao = None
@@ -220,33 +219,6 @@ while True:
                         elif texto.startswith("Integração TrackBrasil:"):
                             integracao_trackbrasil = texto.replace("Integração TrackBrasil:", "").strip()
 
-                    # Exibe os valores capturados
-                    # print(f"Razão Social: {razao_social}")
-                    # print(f"CNPJ: {cnpj}")
-                    # print(f"Nome: {nome}")
-                    # print(f"Nacionalidade: {nacionalidade}")
-                    # print(f"Estado Civil: {estado_civil}")
-                    # print(f"Profissão: {profissao}")
-                    # print(f"RG: {rg}")
-                    # print(f"Orgão Exp: {orgao_exp}")
-                    # print(f"CPF: {cpf}")
-                    # print(f"Nascimento: {nascimento}")
-                    # print(f"Celular Preferencial: {celular_preferencial}")
-                    # print(f"Celular Complementar: {celular_complementar}")
-                    # print(f"Telefone: {telefone}")
-                    # print(f"E-mail: {email}")
-                    # print(f"Vigência do Contrato: {vigencia_contrato}")
-                    # print(f"Método de Cobrança: {metodo_cobranca}")
-                    # print(f"Índice de Participação Padrão: {indice_participacao}")
-                    # print(f"Integração TrackBrasil: {integracao_trackbrasil}")
-                    # print(f"Logradouros: {logradouros}")
-                    # print(f"Números: {numeros}")
-                    # print(f"Bairros: {bairros}")
-                    # print(f"CEPs: {ceps}")
-                    # print(f"Complementos: {complementos}")
-                    # print(f"Referências: {referencias}")
-                    # print(f"Estados: {estados}")
-                    # print(f"Cidades: {cidades}")
                 else:
                     print("Contêiner 'dados' não encontrado.")
                     
