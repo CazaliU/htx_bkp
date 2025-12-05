@@ -703,6 +703,37 @@ while True:
                             
                             print("=" * 50)
                             
+                            # ========== SALVA COBRANÇA NO BANCO ==========
+                            try:
+                                cobranca = Cobrancas_2(
+                                    co_cliente_id=novo_dado.cl_id,
+                                    co_tipo_cobranca=cobranca_dados.get('tipo_cobranca', ''),
+                                    co_integrante=cobranca_dados.get('integrante', ''),
+                                    co_id_cobranca=cobranca_dados.get('id_cobranca', ''),
+                                    co_nosso_numero=cobranca_dados.get('nosso_numero', ''),
+                                    co_vencimento=cobranca_dados.get('vencimento', ''),
+                                    co_emissao=cobranca_dados.get('emissao', ''),
+                                    co_vencimento_original=cobranca_dados.get('vencimento_original', ''),
+                                    co_numero_parcela=cobranca_dados.get('numero_parcela', ''),
+                                    co_qtd_parcelas=cobranca_dados.get('qtd_parcelas', ''),
+                                    co_protesto_automatico=cobranca_dados.get('protesto_automatico', ''),
+                                    co_dias_protestar=cobranca_dados.get('dias_protestar', ''),
+                                    co_banco=cobranca_dados.get('banco', ''),
+                                    co_conta=cobranca_dados.get('conta', ''),
+                                    co_remessado=cobranca_dados.get('remessado', ''),
+                                    co_status=cobranca_dados.get('status', ''),
+                                    co_valor_principal=cobranca_dados.get('valor_principal', ''),
+                                    co_taxas_bancarias=cobranca_dados.get('taxas_bancarias', ''),
+                                    co_ultima_consulta=cobranca_dados.get('ultima_consulta', ''),
+                                    co_historico_interacoes=cobranca_dados.get('historico_interacoes', [])
+                                )
+                                session.add(cobranca)
+                                session.commit()
+                                print(f"✓ Cobrança {idx + 1} salva com sucesso! (ID: {cobranca_dados.get('id_cobranca', '')})")
+                            except Exception as e_save:
+                                print(f"Erro ao salvar cobrança {idx + 1}: {str(e_save)}")
+                                session.rollback()
+                            
                         # Fecha o modal usando ESC ou clicando fora
                         try:
                             # Tenta fechar com ESC
