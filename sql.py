@@ -105,7 +105,6 @@ class Cobrancas_2(Base):
     co_taxas_bancarias = Column(String, nullable=True)  # Taxas bancárias
     co_ultima_consulta = Column(String, nullable=True)  # Última consulta
     co_historico_interacoes = Column(JSON, nullable=True)  # Histórico de interações (JSON array)
-    co_criado_em = Column(String, default="now()", nullable=True)  # Data de criação do registro
 
 
 # Definir o modelo de classe para a tabela 'resumo_cobrancas_2'

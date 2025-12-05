@@ -6,7 +6,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
-from sql import engine, DadosClientes, Aportes, Cobrancas_2
+from sql import engine, DadosClientes, Aportes, Cobrancas_2, ResumoCobrancas_2
 from sqlalchemy.orm import sessionmaker
 from selenium import webdriver
 from dotenv import load_dotenv
@@ -405,10 +405,22 @@ while True:
                 
                 # ========== CAPTURA RESUMO DE COBRANÇAS ==========
                 # Captura dados do resumo de cobranças
-                html_financeiro = driver.page_source
-                soup_financeiro = BeautifulSoup(html_financeiro, 'html.parser')
-                
                 print("\n=== RESUMO DE COBRANÇAS ===")
+                
+                # Inicializa variáveis para armazenar os dados do resumo
+                taxa_admin_total = ""
+                taxa_admin_pendente = ""
+                rateio_sinistros_total = ""
+                rateio_sinistros_pendente = ""
+                aporte_fundo_total = ""
+                aporte_fundo_pendente = ""
+                servico_complementar_total = ""
+                servico_complementar_pendente = ""
+                outra_especificacao_total = ""
+                outra_especificacao_pendente = ""
+                total_em_aberto = ""
+                total_vencido = ""
+                
                 div_sifint = soup_financeiro.find('div', class_='sifint')
                 if div_sifint:
                     # Extrai cada tipo de cobrança
@@ -418,6 +430,24 @@ while True:
                         valores = tipo.find('div').get_text(separator='|').split('|')
                         total = valores[1].strip() if len(valores) > 1 else ""
                         pendente = valores[2].strip() if len(valores) > 2 else ""
+                        
+                        # Armazena nas variáveis corretas
+                        if "Taxa de Administração" in nome or "Taxa Administração" in nome:
+                            taxa_admin_total = total
+                            taxa_admin_pendente = pendente
+                        elif "Rateio de Sinistros" in nome or "Rateio Sinistros" in nome:
+                            rateio_sinistros_total = total
+                            rateio_sinistros_pendente = pendente
+                        elif "Aporte ao Fundo" in nome or "Aporte Fundo" in nome:
+                            aporte_fundo_total = total
+                            aporte_fundo_pendente = pendente
+                        elif "Serviço Complementar" in nome:
+                            servico_complementar_total = total
+                            servico_complementar_pendente = pendente
+                        elif "Outra Especificação" in nome:
+                            outra_especificacao_total = total
+                            outra_especificacao_pendente = pendente
+                        
                         print(f"{nome}: Total {total} | Pendente {pendente}")
                     
                     # Extrai totais gerais
@@ -426,7 +456,32 @@ while True:
                         totais = sub_status.find_all('div', class_='slis_cbr')
                         for total_div in totais:
                             texto = total_div.get_text(strip=True)
+                            if "TOTAL EM ABERTO" in texto:
+                                total_em_aberto = texto.replace("TOTAL EM ABERTO:", "").strip()
+                            elif "TOTAL VENCIDO" in texto:
+                                total_vencido = texto.replace("TOTAL VENCIDO:", "").strip()
                             print(texto)
+                    
+                    # Salva o resumo de cobranças no banco
+                    resumo_cobranca = ResumoCobrancas_2(
+                        rc_cliente_id=novo_dado.cl_id,
+                        rc_taxa_admin_total=taxa_admin_total,
+                        rc_taxa_admin_pendente=taxa_admin_pendente,
+                        rc_rateio_sinistros_total=rateio_sinistros_total,
+                        rc_rateio_sinistros_pendente=rateio_sinistros_pendente,
+                        rc_aporte_fundo_total=aporte_fundo_total,
+                        rc_aporte_fundo_pendente=aporte_fundo_pendente,
+                        rc_servico_complementar_total=servico_complementar_total,
+                        rc_servico_complementar_pendente=servico_complementar_pendente,
+                        rc_outra_especificacao_total=outra_especificacao_total,
+                        rc_outra_especificacao_pendente=outra_especificacao_pendente,
+                        rc_total_em_aberto=total_em_aberto,
+                        rc_total_vencido=total_vencido
+                    )
+                    session.add(resumo_cobranca)
+                    session.commit()
+                    print(f"✓ Resumo de cobranças salvo com sucesso!")
+                    
                 print("=" * 50 + "\n")
                 
                 # Localiza todos os botões de info de cobranças
