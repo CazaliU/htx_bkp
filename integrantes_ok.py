@@ -221,12 +221,189 @@ while True:
 
                 else:
                     print("Contêiner 'dados' não encontrado.")
-                    
-                # # Localiza a aba "financeiro" dentro do modal
+                
+                # ========== SALVAR CLIENTE NO BANCO ANTES DE CONTINUAR ==========
+                # Criar sessão
+                Session = sessionmaker(bind=engine)
+                session = Session()
+
+                # Verificar se o cliente já está cadastrado
+                cliente_existente = session.query(DadosClientes).filter_by(
+                    cl_cnpj=cnpj, 
+                    cl_estado_grupo=estado_grupo, 
+                    cl_cpf=cpf, 
+                    cl_status=status
+                ).first()
+                
+                if cliente_existente:
+                    print(f"Cliente com CNPJ {cnpj}, estado Grupo {estado_grupo} e cpf {cpf} e status {status} já está cadastrado. Pulando para o próximo.")
+                    session.close()
+                    continue
+                
+                # Processa endereços e salva cliente
+                cliente_salvo = False
+                for i in range(0, len(logradouros), 2):
+                    logradouro1 = logradouros[i] if i < len(logradouros) else None
+                    numero1 = numeros[i] if i < len(numeros) else None
+                    bairro1 = bairros[i] if i < len(bairros) else None
+                    cep1 = ceps[i] if i < len(ceps) else None
+                    complemento1 = complementos[i] if i < len(complementos) else None
+                    referencia1 = referencias[i] if i < len(referencias) else None
+                    estado1 = estados[i] if i < len(estados) else None
+                    cidade1 = cidades[i] if i < len(cidades) else None
+
+                    logradouro2 = logradouros[i+1] if i+1 < len(logradouros) else None
+                    numero2 = numeros[i+1] if i+1 < len(numeros) else None
+                    bairro2 = bairros[i+1] if i+1 < len(bairros) else None
+                    cep2 = ceps[i+1] if i+1 < len(ceps) else None
+                    complemento2 = complementos[i+1] if i+1 < len(complementos) else None
+                    referencia2 = referencias[i+1] if i+1 < len(referencias) else None
+                    estado2 = estados[i+1] if i+1 < len(estados) else None
+                    cidade2 = cidades[i+1] if i+1 < len(cidades) else None
+
+                    novo_dado = DadosClientes(
+                        cl_status=status,
+                        cl_data_inclusao=inclusao,
+                        cl_data_vigencia=vigencia,
+                        cl_data_exclusao=exclusao,
+                        cl_razao_social=razao_social,
+                        cl_cnpj=cnpj,
+                        cl_nome=nome,
+                        cl_nacionalidade=nacionalidade,
+                        cl_estado_civil=estado_civil,
+                        cl_profissao=profissao,
+                        cl_rg=rg,
+                        cl_orgao_exp=orgao_exp,
+                        cl_cpf=cpf,
+                        cl_nascimento=nascimento,
+                        cl_logradouro=logradouro1,
+                        cl_numero=numero1,
+                        cl_bairro=bairro1,
+                        cl_cep=cep1,
+                        cl_complemento=complemento1,
+                        cl_referencia=referencia1,
+                        cl_estado=estado1,
+                        cl_cidade=cidade1,
+                        cl_adm_logradouro=logradouro2,
+                        cl_adm_numero=numero2,
+                        cl_adm_bairro=bairro2,
+                        cl_adm_cep=cep2,
+                        cl_adm_complemento=complemento2,
+                        cl_adm_referencia=referencia2,
+                        cl_adm_estado=estado2,
+                        cl_adm_cidade=cidade2,
+                        cl_celular_preferencial=celular_preferencial,
+                        cl_celular_complementar=celular_complementar,
+                        cl_telefone=telefone,
+                        cl_email=email,
+                        cl_vigencia_contrato=vigencia_contrato,
+                        cl_metodo_cobranca=metodo_cobranca,
+                        cl_indice_participacao=indice_participacao,
+                        cl_integracao_trackbrasil=integracao_trackbrasil,
+                        cl_estado_grupo=estado_grupo
+                    )
+
+                    try:
+                        # Adicionar e confirmar a transação
+                        session.add(novo_dado)
+                        session.commit()
+                        print(f"✓ Cliente salvo com sucesso! ID: {novo_dado.cl_id}")
+                        cliente_salvo = True
+                        break  # Só precisa salvar uma vez
+                    except IntegrityError as e:
+                        if 'uq_cnpj_estado_grupo' in str(e.orig):
+                            print(f"Erro: O CNPJ {cnpj}, estado Grupo {estado_grupo} e cpf {cpf} já existem no banco de dados.")
+                        else:
+                            print(f"Erro de integridade: {e}")
+                        session.rollback()
+                        session.close()
+                        continue  # Pula para próximo cliente
+                
+                if not cliente_salvo:
+                    print("Erro ao salvar cliente. Pulando para o próximo.")
+                    session.close()
+                    continue
+                
+                # ========== NAVEGAÇÃO PARA ABA FINANCEIRO ==========
+                # Localiza a aba "financeiro" dentro do modal
                 aba_financeiro = driver.find_element(By.CSS_SELECTOR, 'li#licobint[data-id="financeiro"]')
                 aba_financeiro.click()
                 time.sleep(2)
                 
+                # ========== CAPTURA E SALVA APORTES ==========
+                html_financeiro = driver.page_source
+                soup_financeiro = BeautifulSoup(html_financeiro, 'html.parser')
+                
+                aportes_capturados = []
+                total_aportes_calculados = None
+                caixa_total_valor = None
+                
+                fundo_rateio_div = soup_financeiro.find('div', id='lfundo')
+                if fundo_rateio_div:
+                    tabela_fundo = fundo_rateio_div.find('table', class_='table_simples')
+                    if tabela_fundo:
+                        linhas = tabela_fundo.find('tbody').find_all('tr')
+                        
+                        print("\n=== FUNDO DE RATEIO ===")
+                        for linha in linhas[:-1]:  # Ignora a última linha (totais)
+                            colunas = linha.find_all('td')
+                            if len(colunas) >= 6:
+                                aporte_id = colunas[0].text.strip()
+                                data = colunas[1].text.strip()
+                                tipo = colunas[2].text.strip()
+                                valor = colunas[3].text.strip()
+                                valor_pago = colunas[4].text.strip()
+                                percentual = colunas[5].text.strip()
+                                
+                                aportes_capturados.append({
+                                    'id': aporte_id,
+                                    'data': data,
+                                    'tipo': tipo,
+                                    'valor': valor,
+                                    'valor_pago': valor_pago,
+                                    'percentual': percentual
+                                })
+                                
+                                print(f"ID: {aporte_id} | Data: {data} | Tipo: {tipo} | Valor: {valor} | Pago: {valor_pago} | %: {percentual}")
+                        
+                        # Captura linha de totais
+                        linha_total = linhas[-1]
+                        colunas_total = linha_total.find_all('td')
+                        if len(colunas_total) >= 2:
+                            span_total = colunas_total[0].find('span')
+                            span_caixa = colunas_total[1].find('span')
+                            
+                            if span_total:
+                                total_aportes_calculados = span_total.text.strip()
+                            if span_caixa:
+                                caixa_total_valor = span_caixa.text.strip()
+                            
+                            print(f"\nTotal Aportes: {total_aportes_calculados}")
+                            print(f"Caixa Total: {caixa_total_valor}")
+                        print("=" * 50 + "\n")
+                        
+                        # Salva os aportes relacionados ao cliente
+                        if aportes_capturados:
+                            print(f"Salvando {len(aportes_capturados)} aportes para o cliente {novo_dado.cl_id}...")
+                            for aporte_data in aportes_capturados:
+                                aporte = Aportes(
+                                    ap_cliente_id=novo_dado.cl_id,
+                                    ap_id_aporte=aporte_data['id'],
+                                    ap_data=aporte_data['data'],
+                                    ap_tipo=aporte_data['tipo'],
+                                    ap_valor=aporte_data['valor'],
+                                    ap_valor_pago=aporte_data['valor_pago'],
+                                    ap_percentual=aporte_data['percentual'],
+                                    ap_total_aportes_calculados=total_aportes_calculados,
+                                    ap_caixa_total=caixa_total_valor
+                                )
+                                session.add(aporte)
+                            session.commit()
+                            print(f"✓ Aportes salvos com sucesso! (Total: {total_aportes_calculados}, Caixa: {caixa_total_valor})")
+                else:
+                    print("Fundo de Rateio não encontrado.")
+                
+                # ========== CAPTURA RESUMO DE COBRANÇAS ==========
                 # Captura dados do resumo de cobranças
                 html_financeiro = driver.page_source
                 soup_financeiro = BeautifulSoup(html_financeiro, 'html.parser')
@@ -496,171 +673,15 @@ while True:
                 
                 print(f"\nTotal de cobranças processadas: {len(cobrancas_detalhadas)}\n")
                 
-                # Captura dados da tabela Fundo de Rateio
-                html_financeiro = driver.page_source
-                soup_financeiro = BeautifulSoup(html_financeiro, 'html.parser')
-                
-                aportes_capturados = []  # Lista para armazenar aportes temporariamente
-                total_aportes_calculados = None
-                caixa_total_valor = None
-                
-                fundo_rateio_div = soup_financeiro.find('div', id='lfundo')
-                if fundo_rateio_div:
-                    tabela_fundo = fundo_rateio_div.find('table', class_='table_simples')
-                    if tabela_fundo:
-                        linhas = tabela_fundo.find('tbody').find_all('tr')
-                        
-                        print("\n=== FUNDO DE RATEIO ===")
-                        for linha in linhas[:-1]:  # Ignora a última linha (totais)
-                            colunas = linha.find_all('td')
-                            if len(colunas) >= 6:
-                                aporte_id = colunas[0].text.strip()
-                                data = colunas[1].text.strip()
-                                tipo = colunas[2].text.strip()
-                                valor = colunas[3].text.strip()
-                                valor_pago = colunas[4].text.strip()
-                                percentual = colunas[5].text.strip()
-                                
-                                # Armazena o aporte para salvar depois
-                                aportes_capturados.append({
-                                    'id': aporte_id,
-                                    'data': data,
-                                    'tipo': tipo,
-                                    'valor': valor,
-                                    'valor_pago': valor_pago,
-                                    'percentual': percentual
-                                })
-                                
-                                print(f"ID: {aporte_id} | Data: {data} | Tipo: {tipo} | Valor: {valor} | Pago: {valor_pago} | %: {percentual}")
-                        
-                        # Captura linha de totais
-                        linha_total = linhas[-1]
-                        colunas_total = linha_total.find_all('td')
-                        if len(colunas_total) >= 2:
-                            # Extrai o valor do span (ex: "136.5" e "R$ 273.000,00")
-                            span_total = colunas_total[0].find('span')
-                            span_caixa = colunas_total[1].find('span')
-                            
-                            if span_total:
-                                total_aportes_calculados = span_total.text.strip()
-                            if span_caixa:
-                                caixa_total_valor = span_caixa.text.strip()
-                            
-                            print(f"\nTotal Aportes: {total_aportes_calculados}")
-                            print(f"Caixa Total: {caixa_total_valor}")
-                        print("=" * 50 + "\n")
-                else:
-                    print("Fundo de Rateio não encontrado.")
-                
-                # Criar sessão
-                Session = sessionmaker(bind=engine)
-                session = Session()
-
-                # Verificar se o cliente já está cadastrado
-                cliente_existente = session.query(DadosClientes).filter_by(cl_cnpj=cnpj, cl_estado_grupo=estado_grupo, cl_cpf=cpf, cl_status=status).first()
-                try:
-                    if cliente_existente:
-                        print(f"Cliente com CNPJ {cnpj}, estado Grupo {estado_grupo} e cpf {cpf} e status {status} já está cadastrado já está cadastrado. Pulando para o próximo.")
-                        continue
-                except Exception as e:
-                    print(f"Erro ao consultar o cliente no banco de dados: {e}")
-                finally:
-                    session.close()
-
-                # Itera sobre os valores capturados e insere no banco de dados
-                for i in range(0, len(logradouros), 2):
-                    logradouro1 = logradouros[i] if i < len(logradouros) else None
-                    numero1 = numeros[i] if i < len(numeros) else None
-                    bairro1 = bairros[i] if i < len(bairros) else None
-                    cep1 = ceps[i] if i < len(ceps) else None
-                    complemento1 = complementos[i] if i < len(complementos) else None
-                    referencia1 = referencias[i] if i < len(referencias) else None
-                    estado1 = estados[i] if i < len(estados) else None
-                    cidade1 = cidades[i] if i < len(cidades) else None
-
-                    logradouro2 = logradouros[i+1] if i+1 < len(logradouros) else None
-                    numero2 = numeros[i+1] if i+1 < len(numeros) else None
-                    bairro2 = bairros[i+1] if i+1 < len(bairros) else None
-                    cep2 = ceps[i+1] if i+1 < len(ceps) else None
-                    complemento2 = complementos[i+1] if i+1 < len(complementos) else None
-                    referencia2 = referencias[i+1] if i+1 < len(referencias) else None
-                    estado2 = estados[i+1] if i+1 < len(estados) else None
-                    cidade2 = cidades[i+1] if i+1 < len(cidades) else None
-
-                    novo_dado = DadosClientes(
-                        cl_status=status,
-                        cl_data_inclusao=inclusao,
-                        cl_data_vigencia=vigencia,
-                        cl_data_exclusao=exclusao,
-                        cl_razao_social=razao_social,
-                        cl_cnpj=cnpj,
-                        cl_nome=nome,
-                        cl_nacionalidade=nacionalidade,
-                        cl_estado_civil=estado_civil,
-                        cl_profissao=profissao,
-                        cl_rg=rg,
-                        cl_orgao_exp=orgao_exp,
-                        cl_cpf=cpf,
-                        cl_nascimento=nascimento,
-                        cl_logradouro=logradouro1,
-                        cl_numero=numero1,
-                        cl_bairro=bairro1,
-                        cl_cep=cep1,
-                        cl_complemento=complemento1,
-                        cl_referencia=referencia1,
-                        cl_estado=estado1,
-                        cl_cidade=cidade1,
-                        cl_adm_logradouro=logradouro2,
-                        cl_adm_numero=numero2,
-                        cl_adm_bairro=bairro2,
-                        cl_adm_cep=cep2,
-                        cl_adm_complemento=complemento2,
-                        cl_adm_referencia=referencia2,
-                        cl_adm_estado=estado2,
-                        cl_adm_cidade=cidade2,
-                        cl_celular_preferencial=celular_preferencial,
-                        cl_celular_complementar=celular_complementar,
-                        cl_telefone=telefone,
-                        cl_email=email,
-                        cl_vigencia_contrato=vigencia_contrato,
-                        cl_metodo_cobranca=metodo_cobranca,
-                        cl_indice_participacao=indice_participacao,
-                        cl_integracao_trackbrasil=integracao_trackbrasil,
-                        cl_estado_grupo=estado_grupo
-                    )
-
-                    try: 
-                        # Adicionar e confirmar a transação
-                        session.add(novo_dado)
-                        session.commit()
-                        
-                        # Salva os aportes relacionados ao cliente
-                        if aportes_capturados:
-                            print(f"Salvando {len(aportes_capturados)} aportes para o cliente {novo_dado.cl_id}...")
-                            for aporte_data in aportes_capturados:
-                                aporte = Aportes(
-                                    ap_cliente_id=novo_dado.cl_id,
-                                    ap_id_aporte=aporte_data['id'],
-                                    ap_data=aporte_data['data'],
-                                    ap_tipo=aporte_data['tipo'],
-                                    ap_valor=aporte_data['valor'],
-                                    ap_valor_pago=aporte_data['valor_pago'],
-                                    ap_percentual=aporte_data['percentual'],
-                                    ap_total_aportes_calculados=total_aportes_calculados,
-                                    ap_caixa_total=caixa_total_valor
-                                )
-                                session.add(aporte)
-                            session.commit()
-                            print(f"Aportes salvos com sucesso! (Total: {total_aportes_calculados}, Caixa: {caixa_total_valor})")
-                    except IntegrityError as e:
-                        if 'uq_cnpj_estado_grupo' in str(e.orig):
-                            print(f"Erro: O CNPJ {novo_dado.cnpj}, estado Grupo {novo_dado.estado_grupo} e cpf {novo_dado.cpf} já existem no banco de dados.")
-                        else:
-                            print(f"Erro de integridade: {e}")
-                        session.rollback()
+                # Fecha a sessão do banco de dados
+                session.close()
                         
             except Exception as e:
                     print(f"Erro ao processar botão {index + 1}: {e}")
+                    try:
+                        session.close()
+                    except:
+                        pass
                     continue
 
         # fecha modal
