@@ -3,6 +3,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from sqlalchemy.exc import IntegrityError
 from sql import engine, DadosClientes, Aportes
@@ -253,6 +254,216 @@ while True:
                 aba_financeiro = driver.find_element(By.CSS_SELECTOR, 'li#licobint[data-id="financeiro"]')
                 aba_financeiro.click()
                 time.sleep(2)
+                
+                # Captura dados do resumo de cobranças
+                html_financeiro = driver.page_source
+                soup_financeiro = BeautifulSoup(html_financeiro, 'html.parser')
+                
+                print("\n=== RESUMO DE COBRANÇAS ===")
+                div_sifint = soup_financeiro.find('div', class_='sifint')
+                if div_sifint:
+                    # Extrai cada tipo de cobrança
+                    tipos_cobranca = div_sifint.find_all('div', class_='lis_cbr')
+                    for tipo in tipos_cobranca:
+                        nome = tipo.find('span').text.strip()
+                        valores = tipo.find('div').get_text(separator='|').split('|')
+                        total = valores[1].strip() if len(valores) > 1 else ""
+                        pendente = valores[2].strip() if len(valores) > 2 else ""
+                        print(f"{nome}: Total {total} | Pendente {pendente}")
+                    
+                    # Extrai totais gerais
+                    sub_status = div_sifint.find('div', class_='sub_status_cbr')
+                    if sub_status:
+                        totais = sub_status.find_all('div', class_='slis_cbr')
+                        for total_div in totais:
+                            texto = total_div.get_text(strip=True)
+                            print(texto)
+                print("=" * 50 + "\n")
+                
+                # Localiza todos os botões de info de cobranças
+                botoes_info_cobranca = driver.find_elements(By.CSS_SELECTOR, 'i.info_cobranca.ici')
+                print(f"Total de cobranças encontradas: {len(botoes_info_cobranca)}\n")
+                
+                # Processa cada modal de cobrança
+                cobrancas_detalhadas = []  # Lista para armazenar cobranças
+                
+                for idx, botao_info in enumerate(botoes_info_cobranca):
+                    try:
+                        # Rola até o elemento e usa JavaScript para clicar
+                        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", botao_info)
+                        time.sleep(0.3)
+                        driver.execute_script("arguments[0].click();", botao_info)
+                        
+                        # Aguarda o modal aparecer
+                        WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.CSS_SELECTOR, 'div#modal1.modal.fade.in'))
+                        )
+                        time.sleep(1.5)  # Tempo adicional para carregar conteúdo completo
+                        
+                        # Garante que estamos na aba "dados"
+                        try:
+                            aba_dados_btn = driver.find_element(By.CSS_SELECTOR, 'div#modal1 li[data-id="dados"]')
+                            if aba_dados_btn:
+                                driver.execute_script("arguments[0].click();", aba_dados_btn)
+                                time.sleep(0.5)
+                        except:
+                            pass  # Se não encontrar, provavelmente já está na aba dados
+                        
+                        # Captura HTML do modal ativo especificamente
+                        modal_element = driver.find_element(By.CSS_SELECTOR, 'div#modal1')
+                        html_modal = modal_element.get_attribute('outerHTML')
+                        soup_modal = BeautifulSoup(html_modal, 'html.parser')
+                        
+                        # Localiza a aba "dados" dentro do modal-body
+                        aba_dados = soup_modal.find('div', class_='tab dados')
+                        
+                        if aba_dados:
+                            print(f"\n=== COBRANÇA {idx + 1} ===")
+                            
+                            # Extrai tipo de cobrança (título)
+                            tipo_cobranca_elem = aba_dados.find('span', class_='font-danger')
+                            tipo_cobranca = tipo_cobranca_elem.text.strip() if tipo_cobranca_elem else ""
+                            
+                            # Extrai integrante
+                            integrante_div = aba_dados.find('div', class_='twelve columns fv')
+                            integrante = ""
+                            if integrante_div:
+                                texto_integrante = integrante_div.text.strip()
+                                integrante = texto_integrante.replace("Integrante:", "").strip()
+                            
+                            # Extrai campos das linhas
+                            id_cobranca = ""
+                            nosso_numero = ""
+                            vencimento = ""
+                            emissao = ""
+                            vencimento_original = ""
+                            numero_parcela = ""
+                            qtd_parcelas = ""
+                            protesto_automatico = ""
+                            dias_protestar = ""
+                            banco = ""
+                            conta = ""
+                            remessado = ""
+                            status_cobranca = ""
+                            
+                            # Percorre todas as divs com classe "fv" para extrair os dados
+                            campos_fv = aba_dados.find_all('div', class_='fv')
+                            for campo in campos_fv:
+                                texto = campo.text.strip()
+                                
+                                if "Id./Nosso Número:" in texto:
+                                    # Separa Id e Nosso Número
+                                    partes = texto.replace("Id./Nosso Número:", "").strip().split('/')
+                                    id_cobranca = partes[0].strip() if len(partes) > 0 else ""
+                                    nosso_numero = partes[1].strip() if len(partes) > 1 else ""
+                                elif "Vencimento:" in texto and "Original" not in texto:
+                                    vencimento = texto.replace("Vencimento:", "").strip()
+                                elif "Emissão:" in texto:
+                                    emissao = texto.replace("Emissão:", "").strip()
+                                elif "Vencimento Original:" in texto:
+                                    vencimento_original = texto.replace("Vencimento Original:", "").strip()
+                                elif "N° da Parcela:" in texto:
+                                    numero_parcela = texto.replace("N° da Parcela:", "").strip()
+                                elif "Qtd. de Parcelas:" in texto:
+                                    qtd_parcelas = texto.replace("Qtd. de Parcelas:", "").strip()
+                                elif "Protesto Automático:" in texto:
+                                    protesto_automatico = texto.replace("Protesto Automático:", "").strip()
+                                elif "Dias p/ Protestar:" in texto:
+                                    dias_protestar = texto.replace("Dias p/ Protestar:", "").strip()
+                                elif "Banco:" in texto:
+                                    banco = texto.replace("Banco:", "").strip()
+                                elif "Conta:" in texto:
+                                    conta = texto.replace("Conta:", "").strip()
+                                elif "Remessado:" in texto:
+                                    remessado = texto.replace("Remessado:", "").strip()
+                                elif "Status:" in texto:
+                                    # O status pode conter tags span, então pegamos o texto da label
+                                    label_status = campo.find('span', class_='label')
+                                    status_cobranca = label_status.text.strip() if label_status else ""
+                            
+                            # Extrai valor principal
+                            valor_principal = ""
+                            # Busca na coluna da direita (four columns)
+                            four_columns = aba_dados.find('div', class_='four columns')
+                            if four_columns:
+                                h3_valor = four_columns.find('h3', class_='form_section')
+                                if h3_valor:
+                                    b_tag = h3_valor.find('b')
+                                    if b_tag:
+                                        valor_principal = b_tag.text.strip()
+                            
+                            # Extrai taxas bancárias
+                            taxas_bancarias = ""
+                            if four_columns:
+                                well_div = four_columns.find('div', class_='well')
+                                if well_div:
+                                    taxas_bancarias = well_div.text.strip()
+                            
+                            # Armazena os dados capturados
+                            cobranca_dados = {
+                                'tipo_cobranca': tipo_cobranca,
+                                'integrante': integrante,
+                                'id_cobranca': id_cobranca,
+                                'nosso_numero': nosso_numero,
+                                'vencimento': vencimento,
+                                'emissao': emissao,
+                                'vencimento_original': vencimento_original,
+                                'numero_parcela': numero_parcela,
+                                'qtd_parcelas': qtd_parcelas,
+                                'protesto_automatico': protesto_automatico,
+                                'dias_protestar': dias_protestar,
+                                'banco': banco,
+                                'conta': conta,
+                                'remessado': remessado,
+                                'status': status_cobranca,
+                                'valor_principal': valor_principal,
+                                'taxas_bancarias': taxas_bancarias
+                            }
+                            
+                            cobrancas_detalhadas.append(cobranca_dados)
+                            
+                            # Imprime os dados capturados
+                            print(f"Tipo: {tipo_cobranca}")
+                            print(f"Integrante: {integrante}")
+                            print(f"ID/Nosso Número: {id_cobranca} / {nosso_numero}")
+                            print(f"Vencimento: {vencimento}")
+                            print(f"Emissão: {emissao}")
+                            print(f"Vencimento Original: {vencimento_original}")
+                            print(f"Parcela: {numero_parcela} de {qtd_parcelas}")
+                            print(f"Protesto Automático: {protesto_automatico}")
+                            print(f"Dias p/ Protestar: {dias_protestar}")
+                            print(f"Banco: {banco}")
+                            print(f"Conta: {conta}")
+                            print(f"Remessado: {remessado}")
+                            print(f"Status: {status_cobranca}")
+                            print(f"Valor: {valor_principal}")
+                            print(f"Taxas: {taxas_bancarias}")
+                            print("=" * 50)
+                            
+                        # Fecha o modal usando ESC ou clicando fora
+                        try:
+                            # Tenta fechar com ESC
+                            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+                            time.sleep(2)  # Aguarda 2 segundos após fechar o modal
+                        except:
+                            # Se ESC não funcionar, tenta clicar no overlay
+                            try:
+                                overlay = driver.find_element(By.CSS_SELECTOR, 'div.modal-backdrop, div.fundo_modal')
+                                driver.execute_script("arguments[0].click();", overlay)
+                                time.sleep(2)
+                            except:
+                                pass
+                        
+                    except Exception as e:
+                        print(f"Erro ao processar cobrança {idx + 1}: {str(e)}")
+                        # Tenta fechar modal em caso de erro
+                        try:
+                            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+                            time.sleep(2)  # Aguarda 2 segundos após fechar
+                        except:
+                            pass
+                
+                print(f"\nTotal de cobranças processadas: {len(cobrancas_detalhadas)}\n")
                 
                 # Captura dados da tabela Fundo de Rateio
                 html_financeiro = driver.page_source
